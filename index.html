@@ -67,6 +67,40 @@ this.addEventListener('crossoriginmessage', function(event) {
     </section>
     <section>
       <h2>
+        Terminology
+      </h2>
+      <p>
+        The terms <dfn><a href="http://www.w3.org/TR/html5/webappapis.html#event-handlers">event
+        handler</a></dfn>, <dfn><a href=
+        "http://www.w3.org/TR/html5/webappapis.html#event-handler-event-type">event handler event
+        type</a></dfn>, and <dfn><a href=
+        "http://www.w3.org/TR/html5/webappapis.html#queue-a-task">queue a task</a></dfn> are defined
+        in [[!HTML5]].
+      </p>
+      <p>
+        <code><a href=
+        'http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects'><dfn>Promise</dfn></a></code>
+        is defined in [[!ECMASCRIPT]].
+      </p>
+      <p>
+        <code><a href="http://www.w3.org/TR/dom/#eventinit"><dfn>EventInit</dfn></a></code>,
+        <code><a href="http://www.w3.org/TR/dom/#domexception"><dfn>DOMException</dfn></a></code>, and
+        <code><a href="http://www.w3.org/TR/dom/#aborterror"><dfn>AbortError</dfn></a></code>
+        are defined in [[!DOM]].
+      </p>
+      <p>
+        <code><a href="http://www.w3.org/TR/webmessaging/#messagechannel"><dfn>MessageChannel</dfn></a></code>,
+        <code><a href="http://www.w3.org/TR/webmessaging/#messageport"><dfn>MessagePort</dfn></a></code>, and
+        <code><a href="http://www.w3.org/TR/webmessaging/#messageevent"><dfn>MessageEvent</dfn></a></code>
+        are defined in [[!WEBMESSAGING]]
+      </p>
+      <p>
+        <dfn>Service Worker</dfn>, <dfn>ServiceWorkerRegistration</dfn>, and
+        <dfn>ServiceWorkerGlobalScope</dfn> are defined in [[!SERVICE-WORKERS]].
+      </p>
+    </section>
+    <section>
+      <h2>
         Security and privacy considerations
       </h2>
     </section>
@@ -181,6 +215,11 @@ this.addEventListener('crossoriginmessage', function(event) {
               void acceptConnection(Promise&lt;boolean&gt; shouldAccept)
             </dt>
           </dl>
+          <p>
+            The
+            <code><dfn id="widl-CrossOriginConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection</dfn></code>
+            method must be called with a promise that resolves to true or false.
+          </p>
         </section>
         <section>
           <h2>
@@ -218,7 +257,7 @@ this.addEventListener('crossoriginmessage', function(event) {
           <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
           terminate these steps.
           </li>
-          <li>If <var>registration</var>'s <a>active worker</a> is not null, then:
+          <li>If <var>registration</var>'s active worker is not null, then:
           </li>
           <ol>
             <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
