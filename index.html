@@ -36,6 +36,8 @@
         Introduction
       </h2>
       <p>
+        With the navigator.connect API clients (either webpages or some flavor of worker) can
+        connect to services, with these services being implemented by service workers.
       </p>
       <section>
         <h2>
@@ -103,6 +105,23 @@ this.addEventListener('crossoriginmessage', function(event) {
       <h2>
         Security and privacy considerations
       </h2>
+      <p>
+        Most of what is described here can already be achieved using cross origin iframes, regular
+        cross origin messaging, and regular service worker messaging. As such the security and
+        privacy implications of this API are minor. Having said that, there are a few parts that are
+        a few interesting security and privacy considerations to keep in mind:
+      </p>
+      <p>
+        User agents should not leak any information on sites a user has visited etc to other
+        webpages. In particular this means that a service rejecting a connection attempt should be
+        indistinguishable from no service being installed to service a particular URL.
+      </p>
+      <p class="note">
+        Currently this API only allows connecting to services that have already been installed. If
+        in the future some mechanism where attempting to connect to a service can trigger
+        installation of a service worker, this of course has its own set of security and privacy
+        implications.
+      </p>
     </section>
     <section>
       <h2>
@@ -121,6 +140,10 @@ this.addEventListener('crossoriginmessage', function(event) {
         The <code><dfn id=
         "widl-NavigatorConnect-connect-Promise-MessagePort--USVString-url">connect</dfn></code>
         method when invoked runs the "<a href="#connect">Connect</a>" algorithm.
+      </p>
+      <p class="note">
+        Maybe connect should have an additional parameter to connect to pass extra structured
+        data to the connection event handler.
       </p>
       <p class="issue">
         Somehow describe that both closing the message port returned by connect and the context
@@ -257,6 +280,9 @@ this.addEventListener('crossoriginmessage', function(event) {
           <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
           terminate these steps.
           </li>
+          <p class="issue">It might be nice to be able to connect to a service without that
+          service having to have been installed first. Maybe web manifests can help here to provide
+          a way to determine what service worker to install for a specific service URL?</p>
           <li>If <var>registration</var>'s active worker is not null, then:
           </li>
           <ol>
