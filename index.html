@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      navigator.connect API
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class='remove'>
+    </script>
+    <script class="remove">
+      // See http://www.w3.org/respec/ for ReSpec documentation.
+      var respecConfig = {
+          specStatus: "base",
+          shortName: "navigator-connect-api",
+          editors: [
+            {
+              name: "Marijn Kruisselbrink",
+              company: "Google",
+              companyURL: "https://www.google.com/"
+            },
+          ],
+          noLegacyStyle: true,
+      };
+    </script>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+        This document describes an API to facility cross origin communication between service workers and webpages.
+      </p>
+    </section>
+    <section id='sotd'></section>
+    <section class='informative' id="introduction">
+      <h2>
+        Introduction
+      </h2>
+      <p>
+      </p>
+      <section>
+        <h2>
+          Example
+        </h2>
+        <pre class="example highlight">
+// http://example.com/webapp.js
+navigator.connect('https://example.com/services/echo').then(
+  function(port) {
+    port.postMessage('hello');
+    port.onmessage = function(event) {
+      // Handle reply from the service.
+    };
+  }
+);
+
+// https://example.com/serviceworker.js
+this.addEventListener('crossoriginconnect', function(event) {
+  // Optionally check event.client.origin to determine if that origin should be
+  // allowed access to this service.
+  event.acceptConnection(event.client.targetUrl === 'https://example.com/services/echo');
+});
+
+this.addEventListener('crossoriginmessage', function(event) {
+  event.source.postMessage(event.data, event.ports);
+});
+        </pre>
+      </section>
+    </section>
+    <section>
+      <h2>
+        Security and privacy considerations
+      </h2>
+    </section>
+    <section>
+      <h2>
+        Client Context
+      </h2>
+      <dl title="[NoInterfaceObject, Exposed=(Window,Worker)] interface NavigatorConnect" class="idl">
+        <dt>
+          Promise&lt;MessagePort&gt; connect(USVString url)
+        </dt>
+      </dl>
+      <dl title="Navigator implements NavigatorConnect" class="idl">
+      </dl>
+      <dl title="WorkerNavigator implements NavigatorConnect" class="idl">
+      </dl>
+      <p>
+        The <code><dfn id=
+        "widl-NavigatorConnect-connect-Promise-MessagePort--USVString-url">connect</dfn></code>
+        method when invoked runs the "<a href="#connect">Connect</a>" algorithm.
+      </p>
+      <p class="issue">
+        Somehow describe that both closing the message port returned by connect and the context
+        connect was called in being destroyed result in this webpage being removed from the cross
+        origin clients for all service workers.
+      </p>
+    </section>
+    <section>
+      <h2>
+        Service Worker Context
+      </h2>
+      <p>
+        The Service Worker specification defines a <code>ServiceWorkerGlobalScope</code> interface
+        [[!SERVICE-WORKERS]], which this specification extends.
+      </p>
+      <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
+        <dt>
+          readonly attribute CrossOriginServiceWorkerClients crossOriginClients
+        </dt>
+        <dt>
+          attribute EventHandler oncrossoriginconnect
+        </dt>
+        <dt>
+          attribute EventHandler oncrossoriginmessage
+        </dt>
+      </dl>
+      <section>
+        <h2>
+          CrossOriginServiceWorkerClient
+        </h2>
+        <p>
+          Every cross origin client connected to, or attempting to connect to a service worker, is
+          represented by a CrossOriginServiceWorkerClient instance. Currently connected clients are
+          stored in an internal bookkeeping list of clients associated with each Service Worker
+          Registration.
+        </p>
+        <dl title="[Exposed=ServiceWorker] interface CrossOriginServiceWorkerClient" class="idl">
+          <dt>
+            readonly attribute USVString origin
+          </dt>
+          <dt>
+            readonly attribute USVString targetUrl
+          </dt>
+          <dt>
+            void postMessage(any message, optional sequence&lt;Transferable&gt; transfer)
+          </dt>
+        </dl>
+        <p>
+          The <code><dfn id="widl-CrossOriginServiceWorkerClient-origin">origin</dfn></code>
+          attribute exposes the origin of the client that connected to this <a>Service Worker</a>.
+        </p>
+        <p>
+          The <code><dfn id="widl-CrossOriginServiceWorkerClient-targetUrl">targetUrl</dfn></code>
+          attribute exposes the url it connected to.
+        </p>
+        <p>
+          The <code><dfn id="widl-CrossOriginServiceWorkerClient-postMessage-void-any-message-sequence-Transferable--transfer">postMessage</dfn>
+          </code> method when invoked calls postMessage on the hidden <code><a>MessagePort</a></code>
+          associated with this client. If <code>postMessage</code> is called on a client whose
+          connection has not been accepted yet (or when the connection has been rejected), postMessage
+          will raise some exception.
+        </p>
+      </section>
+      <section>
+        <h2>
+          Events
+        </h2>
+        <p>
+          The <code><dfn id=
+          "widl-ServiceWorkerGlobalScope-oncrossoriginconnect">oncrossoriginconnect</dfn></code>
+          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
+          <code><a>crossoriginconnect</a></code>.
+        </p>
+        <p>
+          The <code><dfn id=
+          "widl-ServiceWorkerGlobalScope-oncrossoriginmessage">oncrossoriginmessage</dfn></code>
+          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
+          <code><a>crossoriginmessage</a></code>.
+        </p>
+        <section>
+          <h2>
+            The <code><dfn>crossoriginconnect</dfn></code> event
+          </h2>
+          <p>
+            The <a>CrossOriginConnectEvent</a> interface represents a received cross origin connection attempts.
+          </p>
+          <dl title="[Exposed=ServiceWorker] interface CrossOriginConnectEvent : Event" class="idl">
+            <dt>
+              readonly attribute CrossOriginServiceWorkerClient client
+            </dt>
+            <dt>
+              void acceptConnection(Promise&lt;boolean&gt; shouldAccept)
+            </dt>
+          </dl>
+        </section>
+        <section>
+          <h2>
+            The <code><dfn>crossoriginmessage</dfn></code> event
+          </h2>
+          <p>
+            This is a <code><a>MessageEvent</a></code> whose <code>event.source</code> is an instance
+            of <code><a>CrossOriginServiceWorkerClient</a></code>.
+          </p>
+          <p class="issue">
+            This isn't possible with the current spec for MessageEvent. The
+            service worker spec has a similar problem with their onmessage event and using a
+            ServiceWorkerClient as source.</spa>
+          </p>
+        </section>
+      </section>
+    </section>
+    <section class="appendix">
+      <h2>
+        Algorithms
+      </h2>
+      <section>
+        <h2>
+          Connect
+        </h2>
+        <ol>
+          <li>Let <var>promise</var> be a new <a><code>Promise</code></a>.
+          </li>
+          <li>Return <var>promise</var> and continue the following steps asynchronously.
+          </li>
+          <li>Let <var>registration</var> be the result of running the "Match Scope" algorithm
+          on <var>url</var>
+          </li>
+          <li>If <var>registration</var> is null, reject <var>promise</var> with a
+          <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
+          terminate these steps.
+          </li>
+          <li>If <var>registration</var>'s <a>active worker</a> is not null, then:
+          </li>
+          <ol>
+            <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
+            following steps as <var>callbackSteps</var>.
+            </li>
+            <li>Fire an event named <code><a>crossoriginconnect</a></code> using
+            <code><a>CrossOriginConnectEvent</a></code> interface at the returned
+            global object.
+            </li>
+            <p class="issue">Better define these next steps.</p>
+            <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
+            <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners called
+            <code><a>acceptConnection</a></code>.
+            </li>
+            <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to
+            <code>true</code>, do the following:
+            <ol>
+              <li>Let <var>messageChannel</var> be a new <a><code>MessageChannel</code></a>.
+              </li>
+              <li>Resolve <var>promise</var> with the first port of <var>messageChannel</var>.
+              </li>
+              <li>Let <var>crossOriginClient</var> be a new
+              <a><code>CrossOriginServiceWorkerClient</code></a> associated with the second port of
+              <var>messageChannel</var>.
+              </li>
+              <li>Add <var>crossOriginClient</var> to the list of cross origin clients
+              associated with <var>registration</var>.
+              </li>
+            </ol></li>
+            <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose name
+            is "<code><a>AbortError</a></code>".
+            </li>
+          </ol></li>
+          <li>Else:
+          <p class="issue">Figure out sensible behavior when there is no active worker. Probably
+          wait for some worker to become the active worker?</p>
+          </li>
+        </ol>
+        <p class="issue">
+          Somehow phrase this to allow other ways for a user agent to connect to services, in
+          particular services that are not implemented as a service worker.
+        </p>
+      </section>
+    </section>
+  </body>
+</html>
