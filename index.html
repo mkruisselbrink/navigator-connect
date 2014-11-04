@@ -155,21 +155,6 @@ this.addEventListener('crossoriginmessage', function(event) {
       <h2>
         Service Worker Context
       </h2>
-      <p>
-        The Service Worker specification defines a <code>ServiceWorkerGlobalScope</code> interface
-        [[!SERVICE-WORKERS]], which this specification extends.
-      </p>
-      <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
-        <dt>
-          readonly attribute CrossOriginServiceWorkerClients crossOriginClients
-        </dt>
-        <dt>
-          attribute EventHandler oncrossoriginconnect
-        </dt>
-        <dt>
-          attribute EventHandler oncrossoriginmessage
-        </dt>
-      </dl>
       <section>
         <h2>
           CrossOriginServiceWorkerClient
@@ -206,6 +191,49 @@ this.addEventListener('crossoriginmessage', function(event) {
           connection has not been accepted yet (or when the connection has been rejected), postMessage
           will raise some exception.
         </p>
+      </section>
+      <section>
+        <h2>
+          CrossOriginServiceWorkerClients
+        </h2>
+        <dl title="[Exposed=ServiceWorker] interface CrossOriginServiceWorkerClients" class="idl">
+          <dt>
+            Promise&lt;sequence&lt;CrossOriginServiceWorkerClient&gt;&gt; getAll()
+          </dt>
+        </dl>
+        <p>
+          The <code><dfn id="widl-CrossOriginServiceWorkerClients-getAll-Promise-sequence-CrossOriginServiceWorkerClient">getAll</dfn></code>
+          method returns all cross origin clients that are currently connected to this service worker. Specifically this includes all clients
+          for which an oncrossoriginconnect event has been dispatched, and whose connection has been accepted. If a client has closed its
+          messageport it will no longer be returned by getAll, and similarly when a client is unloaded it will no longer be returned by getAll.
+        </p>
+        <p class="note">
+          The getAll method returns the same list of clients for all service workers that are part of the same service worker registration, even
+          though connect and message events are only dispatched to the active service worker version for a particular registration.
+        </p>
+        <p class="issue">
+          It might be useful to allow filtering on targetUrl in a call to getAll, although that can easily enough be added on top of it.
+        </p>
+      </section>
+      <section>
+        <h2>
+          ServiceWorkerGlobalScope
+        </h2>
+        <p>
+          The Service Worker specification defines a <code>ServiceWorkerGlobalScope</code> interface
+          [[!SERVICE-WORKERS]], which this specification extends.
+        </p>
+        <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
+          <dt>
+            readonly attribute CrossOriginServiceWorkerClients crossOriginClients
+          </dt>
+          <dt>
+            attribute EventHandler oncrossoriginconnect
+          </dt>
+          <dt>
+            attribute EventHandler oncrossoriginmessage
+          </dt>
+        </dl>
       </section>
       <section>
         <h2>
