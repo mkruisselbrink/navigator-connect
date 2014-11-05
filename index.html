@@ -165,9 +165,9 @@ this.addEventListener('crossoriginmessage', function(event) {
         </h2>
         <p>
           Every cross origin client connected to, or attempting to connect to a service worker, is
-          represented by a CrossOriginServiceWorkerClient instance. Currently connected clients are
-          stored in an internal bookkeeping list of clients associated with each Service Worker
-          Registration.
+          represented by a CrossOriginServiceWorkerClient instance. Clients that are currently
+          connected are stored in an internal bookkeeping list of clients associated with each
+          Service Worker Registration.
         </p>
         <dl title="[Exposed=ServiceWorker] interface CrossOriginServiceWorkerClient" class="idl">
           <dt>
@@ -195,6 +195,11 @@ this.addEventListener('crossoriginmessage', function(event) {
           <code><a>MessagePort</a></code> associated with this client. If <code>postMessage</code>
           is called on a client whose connection has not been accepted yet (or when the connection
           has been rejected), postMessage will raise some exception.
+        </p>
+        <p>
+          Whenever a message is targetted at the implicit <code><a>MessagePort</a></code>
+          associated with a <code><a>CrossOriginServiceWorkerClient</a></code>, the "<a href=
+          "#deliver-message">Deliver Message</a>" algorithm is executed.
         </p>
       </section>
       <section>
@@ -370,6 +375,41 @@ this.addEventListener('crossoriginmessage', function(event) {
         <p class="issue">
           Somehow phrase this to allow other ways for a user agent to connect to services, in
           particular services that are not implemented as a service worker.
+        </p>
+      </section>
+      <section>
+        <h2>
+          Deliver message
+        </h2>
+        <ol>
+          <li>Let <var>messageEvent</var> be the <code><a>MessageEvent</a></code> targetted at the
+          implicit <code><a>MessagePort</a></code>.
+          </li>
+          <li>Let <var>registration</var> be the <code><a>ServiceWorkerRegistration</a></code>
+          associated with this connection.
+          </li>
+          <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
+          following steps as <var>callbackSteps</var>.
+          </li>
+          <li>Retarget <var>messageEvent</var> at the returned global object, setting its source to
+          the <code><a>CrossOriginServiceWorkerClient</a></code>.
+          </li>
+          <li>Fire <var>messageEvent</var> as an event named <code><a>crossoriginmessage</a></code>
+          at the returned global object.
+          </li>
+        </ol>
+        <p class="note">
+          Note that this means that a message is always delivered to the currently active service
+          worker for a given registration, even if the crossoriginconnect event was delivered to a
+          different version.
+        </p>
+        <p class="note">
+          Also note that this means that a later service worker registration with a narrower scope
+          that would have captured the connection attempt had it existed at the time the connection
+          was made does not now suddenly get messages for this connection. A
+          ServiceWorkerRegistration is associated with a connection at connection time; further
+          messages don't try to look up a different service worker registration for the target URL,
+          but reuse the same registration.
         </p>
       </section>
     </section>
