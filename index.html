@@ -7,8 +7,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class='remove'>
-    </script>
+</script>
     <script class="remove">
+// (this is to make tidy happy)
       // See http://www.w3.org/respec/ for ReSpec documentation.
       var respecConfig = {
           specStatus: "base",
@@ -27,7 +28,8 @@
   <body>
     <section id='abstract'>
       <p>
-        This document describes an API to facility cross origin communication between service workers and webpages.
+        This document describes an API to facility cross origin communication between service
+        workers and webpages.
       </p>
     </section>
     <section id='sotd'></section>
@@ -64,7 +66,7 @@ this.addEventListener('crossoriginconnect', function(event) {
 this.addEventListener('crossoriginmessage', function(event) {
   event.source.postMessage(event.data, event.ports);
 });
-        </pre>
+</pre>
       </section>
     </section>
     <section>
@@ -76,8 +78,8 @@ this.addEventListener('crossoriginmessage', function(event) {
         handler</a></dfn>, <dfn><a href=
         "http://www.w3.org/TR/html5/webappapis.html#event-handler-event-type">event handler event
         type</a></dfn>, and <dfn><a href=
-        "http://www.w3.org/TR/html5/webappapis.html#queue-a-task">queue a task</a></dfn> are defined
-        in [[!HTML5]].
+        "http://www.w3.org/TR/html5/webappapis.html#queue-a-task">queue a task</a></dfn> are
+        defined in [[!HTML5]].
       </p>
       <p>
         <code><a href=
@@ -86,15 +88,18 @@ this.addEventListener('crossoriginmessage', function(event) {
       </p>
       <p>
         <code><a href="http://www.w3.org/TR/dom/#eventinit"><dfn>EventInit</dfn></a></code>,
-        <code><a href="http://www.w3.org/TR/dom/#domexception"><dfn>DOMException</dfn></a></code>, and
-        <code><a href="http://www.w3.org/TR/dom/#aborterror"><dfn>AbortError</dfn></a></code>
+        <code><a href="http://www.w3.org/TR/dom/#domexception"><dfn>DOMException</dfn></a></code>,
+        and <code><a href="http://www.w3.org/TR/dom/#aborterror"><dfn>AbortError</dfn></a></code>
         are defined in [[!DOM]].
       </p>
       <p>
-        <code><a href="http://www.w3.org/TR/webmessaging/#messagechannel"><dfn>MessageChannel</dfn></a></code>,
-        <code><a href="http://www.w3.org/TR/webmessaging/#messageport"><dfn>MessagePort</dfn></a></code>, and
-        <code><a href="http://www.w3.org/TR/webmessaging/#messageevent"><dfn>MessageEvent</dfn></a></code>
-        are defined in [[!WEBMESSAGING]]
+        <code><a href=
+        "http://www.w3.org/TR/webmessaging/#messagechannel"><dfn>MessageChannel</dfn></a></code>,
+        <code><a href=
+        "http://www.w3.org/TR/webmessaging/#messageport"><dfn>MessagePort</dfn></a></code>, and
+        <code><a href=
+        "http://www.w3.org/TR/webmessaging/#messageevent"><dfn>MessageEvent</dfn></a></code> are
+        defined in [[!WEBMESSAGING]]
       </p>
       <p>
         <dfn>Service Worker</dfn>, <dfn>ServiceWorkerRegistration</dfn>, and
@@ -108,8 +113,8 @@ this.addEventListener('crossoriginmessage', function(event) {
       <p>
         Most of what is described here can already be achieved using cross origin iframes, regular
         cross origin messaging, and regular service worker messaging. As such the security and
-        privacy implications of this API are minor. Having said that, there are a few parts that are
-        a few interesting security and privacy considerations to keep in mind:
+        privacy implications of this API are minor. Having said that, there are a few parts that
+        are a few interesting security and privacy considerations to keep in mind:
       </p>
       <p>
         User agents should not leak any information on sites a user has visited etc to other
@@ -127,23 +132,22 @@ this.addEventListener('crossoriginmessage', function(event) {
       <h2>
         Client Context
       </h2>
-      <dl title="[NoInterfaceObject, Exposed=(Window,Worker)] interface NavigatorConnect" class="idl">
+      <dl title="[NoInterfaceObject, Exposed=(Window,Worker)] interface NavigatorConnect" class=
+      "idl">
         <dt>
           Promise&lt;MessagePort&gt; connect(USVString url)
         </dt>
       </dl>
-      <dl title="Navigator implements NavigatorConnect" class="idl">
-      </dl>
-      <dl title="WorkerNavigator implements NavigatorConnect" class="idl">
-      </dl>
+      <dl title="Navigator implements NavigatorConnect" class="idl"></dl>
+      <dl title="WorkerNavigator implements NavigatorConnect" class="idl"></dl>
       <p>
         The <code><dfn id=
         "widl-NavigatorConnect-connect-Promise-MessagePort--USVString-url">connect</dfn></code>
         method when invoked runs the "<a href="#connect">Connect</a>" algorithm.
       </p>
       <p class="note">
-        Maybe connect should have an additional parameter to connect to pass extra structured
-        data to the connection event handler.
+        Maybe connect should have an additional parameter to connect to pass extra structured data
+        to the connection event handler.
       </p>
       <p class="issue">
         Somehow describe that both closing the message port returned by connect and the context
@@ -185,11 +189,12 @@ this.addEventListener('crossoriginmessage', function(event) {
           attribute exposes the url it connected to.
         </p>
         <p>
-          The <code><dfn id="widl-CrossOriginServiceWorkerClient-postMessage-void-any-message-sequence-Transferable--transfer">postMessage</dfn>
-          </code> method when invoked calls postMessage on the hidden <code><a>MessagePort</a></code>
-          associated with this client. If <code>postMessage</code> is called on a client whose
-          connection has not been accepted yet (or when the connection has been rejected), postMessage
-          will raise some exception.
+          The <code><dfn id=
+          "widl-CrossOriginServiceWorkerClient-postMessage-void-any-message-sequence-Transferable--transfer">
+          postMessage</dfn></code> method when invoked calls postMessage on the hidden
+          <code><a>MessagePort</a></code> associated with this client. If <code>postMessage</code>
+          is called on a client whose connection has not been accepted yet (or when the connection
+          has been rejected), postMessage will raise some exception.
         </p>
       </section>
       <section>
@@ -202,17 +207,22 @@ this.addEventListener('crossoriginmessage', function(event) {
           </dt>
         </dl>
         <p>
-          The <code><dfn id="widl-CrossOriginServiceWorkerClients-getAll-Promise-sequence-CrossOriginServiceWorkerClient">getAll</dfn></code>
-          method returns all cross origin clients that are currently connected to this service worker. Specifically this includes all clients
-          for which an oncrossoriginconnect event has been dispatched, and whose connection has been accepted. If a client has closed its
-          messageport it will no longer be returned by getAll, and similarly when a client is unloaded it will no longer be returned by getAll.
+          The <code><dfn id=
+          "widl-CrossOriginServiceWorkerClients-getAll-Promise-sequence-CrossOriginServiceWorkerClient">
+          getAll</dfn></code> method returns all cross origin clients that are currently connected
+          to this service worker. Specifically this includes all clients for which an
+          oncrossoriginconnect event has been dispatched, and whose connection has been accepted.
+          If a client has closed its messageport it will no longer be returned by getAll, and
+          similarly when a client is unloaded it will no longer be returned by getAll.
         </p>
         <p class="note">
-          The getAll method returns the same list of clients for all service workers that are part of the same service worker registration, even
-          though connect and message events are only dispatched to the active service worker version for a particular registration.
+          The getAll method returns the same list of clients for all service workers that are part
+          of the same service worker registration, even though connect and message events are only
+          dispatched to the active service worker version for a particular registration.
         </p>
         <p class="issue">
-          It might be useful to allow filtering on targetUrl in a call to getAll, although that can easily enough be added on top of it.
+          It might be useful to allow filtering on targetUrl in a call to getAll, although that can
+          easily enough be added on top of it.
         </p>
       </section>
       <section>
@@ -220,8 +230,8 @@ this.addEventListener('crossoriginmessage', function(event) {
           ServiceWorkerGlobalScope
         </h2>
         <p>
-          The Service Worker specification defines a <code>ServiceWorkerGlobalScope</code> interface
-          [[!SERVICE-WORKERS]], which this specification extends.
+          The Service Worker specification defines a <code>ServiceWorkerGlobalScope</code>
+          interface [[!SERVICE-WORKERS]], which this specification extends.
         </p>
         <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
           <dt>
@@ -242,23 +252,25 @@ this.addEventListener('crossoriginmessage', function(event) {
         <p>
           The <code><dfn id=
           "widl-ServiceWorkerGlobalScope-oncrossoriginconnect">oncrossoriginconnect</dfn></code>
-          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
-          <code><a>crossoriginconnect</a></code>.
+          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a>
+          is <code><a>crossoriginconnect</a></code>.
         </p>
         <p>
           The <code><dfn id=
           "widl-ServiceWorkerGlobalScope-oncrossoriginmessage">oncrossoriginmessage</dfn></code>
-          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
-          <code><a>crossoriginmessage</a></code>.
+          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a>
+          is <code><a>crossoriginmessage</a></code>.
         </p>
         <section>
           <h2>
             The <code><dfn>crossoriginconnect</dfn></code> event
           </h2>
           <p>
-            The <a>CrossOriginConnectEvent</a> interface represents a received cross origin connection attempts.
+            The <a>CrossOriginConnectEvent</a> interface represents a received cross origin
+            connection attempts.
           </p>
-          <dl title="[Exposed=ServiceWorker] interface CrossOriginConnectEvent : Event" class="idl">
+          <dl title="[Exposed=ServiceWorker] interface CrossOriginConnectEvent : Event" class=
+          "idl">
             <dt>
               readonly attribute CrossOriginServiceWorkerClient client
             </dt>
@@ -267,8 +279,8 @@ this.addEventListener('crossoriginmessage', function(event) {
             </dt>
           </dl>
           <p>
-            The
-            <code><dfn id="widl-CrossOriginConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection</dfn></code>
+            The <code><dfn id=
+            "widl-CrossOriginConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection</dfn></code>
             method must be called with a promise that resolves to true or false.
           </p>
         </section>
@@ -277,13 +289,12 @@ this.addEventListener('crossoriginmessage', function(event) {
             The <code><dfn>crossoriginmessage</dfn></code> event
           </h2>
           <p>
-            This is a <code><a>MessageEvent</a></code> whose <code>event.source</code> is an instance
-            of <code><a>CrossOriginServiceWorkerClient</a></code>.
+            This is a <code><a>MessageEvent</a></code> whose <code>event.source</code> is an
+            instance of <code><a>CrossOriginServiceWorkerClient</a></code>.
           </p>
           <p class="issue">
-            This isn't possible with the current spec for MessageEvent. The
-            service worker spec has a similar problem with their onmessage event and using a
-            ServiceWorkerClient as source.</spa>
+            This isn't possible with the current spec for MessageEvent. The service worker spec has
+            a similar problem with their onmessage event and using a ServiceWorkerClient as source.
           </p>
         </section>
       </section>
@@ -301,53 +312,59 @@ this.addEventListener('crossoriginmessage', function(event) {
           </li>
           <li>Return <var>promise</var> and continue the following steps asynchronously.
           </li>
-          <li>Let <var>registration</var> be the result of running the "Match Scope" algorithm
-          on <var>url</var>
+          <li>Let <var>registration</var> be the result of running the "Match Scope" algorithm on
+          <var>url</var>
           </li>
           <li>If <var>registration</var> is null, reject <var>promise</var> with a
           <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
           terminate these steps.
+            <p class="issue">
+              It might be nice to be able to connect to a service without that service having to
+              have been installed first. Maybe web manifests can help here to provide a way to
+              determine what service worker to install for a specific service URL?
+            </p>
           </li>
-          <p class="issue">It might be nice to be able to connect to a service without that
-          service having to have been installed first. Maybe web manifests can help here to provide
-          a way to determine what service worker to install for a specific service URL?</p>
           <li>If <var>registration</var>'s active worker is not null, then:
-          </li>
-          <ol>
-            <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
-            following steps as <var>callbackSteps</var>.
-            </li>
-            <li>Fire an event named <code><a>crossoriginconnect</a></code> using
-            <code><a>CrossOriginConnectEvent</a></code> interface at the returned
-            global object.
-            </li>
-            <p class="issue">Better define these next steps.</p>
-            <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
-            <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners called
-            <code><a>acceptConnection</a></code>.
-            </li>
-            <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to
-            <code>true</code>, do the following:
             <ol>
-              <li>Let <var>messageChannel</var> be a new <a><code>MessageChannel</code></a>.
+              <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
+              following steps as <var>callbackSteps</var>.
               </li>
-              <li>Resolve <var>promise</var> with the first port of <var>messageChannel</var>.
+              <li>Fire an event named <code><a>crossoriginconnect</a></code> using
+              <code><a>CrossOriginConnectEvent</a></code> interface at the returned global object.
+                <p class="issue">
+                  Better define these next steps.
+                </p>
               </li>
-              <li>Let <var>crossOriginClient</var> be a new
-              <a><code>CrossOriginServiceWorkerClient</code></a> associated with the second port of
-              <var>messageChannel</var>.
+              <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
+              <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners
+              called <code><a>acceptConnection</a></code>.
               </li>
-              <li>Add <var>crossOriginClient</var> to the list of cross origin clients
-              associated with <var>registration</var>.
+              <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to <code>
+                true</code>, do the following:
+                <ol>
+                  <li>Let <var>messageChannel</var> be a new <a><code>MessageChannel</code></a>.
+                  </li>
+                  <li>Resolve <var>promise</var> with the first port of <var>messageChannel</var>.
+                  </li>
+                  <li>Let <var>crossOriginClient</var> be a new
+                  <a><code>CrossOriginServiceWorkerClient</code></a> associated with the second
+                  port of <var>messageChannel</var>.
+                  </li>
+                  <li>Add <var>crossOriginClient</var> to the list of cross origin clients
+                  associated with <var>registration</var>.
+                  </li>
+                </ol>
               </li>
-            </ol></li>
-            <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose name
-            is "<code><a>AbortError</a></code>".
-            </li>
-          </ol></li>
+              <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose
+              name is "<code><a>AbortError</a></code>".
+              </li>
+            </ol>
+          </li>
           <li>Else:
-          <p class="issue">Figure out sensible behavior when there is no active worker. Probably
-          wait for some worker to become the active worker?</p>
+            <p class="issue">
+              Figure out sensible behavior when there is no active worker. Probably wait for some
+              worker to become the active worker?
+            </p>
           </li>
         </ol>
         <p class="issue">
