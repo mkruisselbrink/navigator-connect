@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<script src="service-worker-test-helpers.js"></script>
+<script>
+var state = {};
+
+var fake_test = {
+  step_func: function(f) { return f; }
+};
+
+function unreached_rejection(test, reason) {
+  return function(rejection_cause) {
+    return Promise.reject(rejection_cause);
+  }
+}
+
+function terminate_service_worker(test, registration) {
+  return get_newest_worker(registration)
+    .then(test.step_func(function(worker) {
+        return internals.terminateServiceWorker(worker);
+    }));
+}
+
+// receives messages of the form:
+// {method: 'foo', params: {}, port: MessagePort}
+// calls foo, posts respose to port in form
+// {success: true/false, result: Result}
+window.onmessage = function(event) {
+  try {
+    var method = event.data.method;
+    var params = event.data.params;
+    for (var i = 0; i < params.length; ++i) {
+      if (typeof params[i] === 'string') {
+        if (params[i][0] == '%' && params[i][params[i].length-1] == '%')
+          params[i] = state[params[i].substr(1, params[i].length-2)];
+      }
+    }
+    var p = window[method].apply(window, [fake_test].concat(params));
+    p.then(function(result) {
+        if ('output' in event.data && event.data.output) {
+          state[event.data.output] = result;
+        }
+        event.data.port.postMessage({success: true, result: JSON.stringify(result)});
+    }).catch(function(result) {
+        event.data.port.postMessage({success: false, result: JSON.parse(JSON.stringify(result))});
+    });
+  } catch (e) {
+    event.data.port.postMessage({success: false, result: JSON.parse(JSON.stringify(e))});
+  }
+};
+
+
+</script>

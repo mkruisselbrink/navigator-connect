@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<title>Tests various cases of navigator.connect.</title>
+<script src="resources/testharness.js"></script>
+<script src="resources/testharnessreport.js"></script>
+<script src="resources/testharness-helpers.js"></script>
+<script src="resources/service-worker-test-helpers.js"></script>
+<script src="../polyfill/client-polyfill.js"></script>
+<script src="resources/test-helpers.js"></script>
+<body>
+<script>
+var properties = {timeout: 1500};
+var origin = 'http://localhost:8000/';
+var sw_scope = origin + '/navigator-connect/resources/service-worker-scope' + window.location.pathname;
+HELPERS = new CrossOriginSWHelper(origin);
+</script>
+<script src="resources/connect.js"></script>
+</body>
