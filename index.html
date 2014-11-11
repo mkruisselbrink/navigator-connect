@@ -12,7 +12,7 @@
 // (this is to make tidy happy)
       // See http://www.w3.org/respec/ for ReSpec documentation.
       var respecConfig = {
-          specStatus: "base",
+          specStatus: "unofficial",
           shortName: "navigator-connect-api",
           editors: [
             {
@@ -153,6 +153,10 @@ this.addEventListener('crossoriginmessage', function(event) {
         Somehow describe that both closing the message port returned by connect and the context
         connect was called in being destroyed result in this webpage being removed from the cross
         origin clients for all service workers.
+      </p>
+      <p class="issue">
+        Using a plain MessagePort does not make it possible for the client to be notified that the
+        connection was closed. This might or might not be problematic.
       </p>
     </section>
     <section>
