@@ -3,24 +3,25 @@
 // look like.
 //
 // To use this polyfill, add eventhandlers by calling addEventListener.
-// Assigning to onforeignconnnect/onforeignmessage isn't supported.
+// Assigning to oncrossoriginconnnect/oncrossoriginmessage isn't supported.
 //
 // Furthermore this polyfill might interfere with normal use of fetch and
 // message events, although it tries to only handle fetch and message events
 // that are specifically related to navigator.connect usage.
 //
-// The objects passed to foreignmessage and foreignconnect event handlers aren't
-// true events, or even objects of the right type. Additionally these 'event'
-// objects don't include all the fields the real events should have.
+// The objects passed to crossoriginmessage and crossoriginconnect event
+// handlers aren't true events, or even objects of the right type. Additionally
+// these 'event' objects don't include all the fields the real events should
+// have.
 (function(self){
 
-if ('onforeignconnect' in self) return;
+if ('oncrossoriginconnect' in self) return;
 
-var kForeignConnectMessageTag = 'foreignConnect';
-var kForeignMessageMessageTag = 'foreignMessage';
+var kCrossOriginConnectMessageTag = 'crossOriginConnect';
+var kCrossOriginMessageMessageTag = 'crossOriginMessage';
 var kUrlSuffix = '?navigator-connect-service';
 
-var customListeners = {'foreignconnect': [], 'foreignmessage': []};
+var customListeners = {'crossoriginconnect': [], 'crossoriginmessage': []};
 
 var addEventListener = self.addEventListener;
 self.addEventListener = function(type, listener, useCapture) {
@@ -62,11 +63,11 @@ self.addEventListener('fetch', function(event) {
               "msg_channel.port1.onmessage = function(em) {\n" +
                 "client_channel.port1.postMessage(em.data, em.ports);\n" +
               "};\n" +
-              "navigator.serviceWorker.controller.postMessage({" + kForeignMessageMessageTag + ": ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
+              "navigator.serviceWorker.controller.postMessage({" + kCrossOriginMessageMessageTag + ": ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
             "};\n" +
             "e.data.connect.postMessage({connected: client_channel.port2}, [client_channel.port2]);\n" +
           "};\n" +
-          "navigator.serviceWorker.controller.postMessage({" + kForeignConnectMessageTag + ": document.location.href, port: service_channel.port2}, [service_channel.port2]);\n" +
+          "navigator.serviceWorker.controller.postMessage({" + kCrossOriginConnectMessageTag + ": document.location.href, port: service_channel.port2}, [service_channel.port2]);\n" +
         "}\n" +
       "};</script>",
                  {headers: {'content-type': 'text/html'}})
@@ -74,13 +75,13 @@ self.addEventListener('fetch', function(event) {
   event.stopImmediatePropagation();
 });
 
-function handleForeignConnect(data) {
+function handleCrossOriginConnect(data) {
   var replied = false;
-  var targetUrl = data[kForeignConnectMessageTag];
+  var targetUrl = data[kCrossOriginConnectMessageTag];
   if (targetUrl.indexOf(kUrlSuffix, targetUrl.length - kUrlSuffix.length) !== -1) {
     targetUrl = targetUrl.substr(0, targetUrl.length - kUrlSuffix.length);
   }
-  dispatchCustomEvent('foreignconnect', {
+  dispatchCustomEvent('crossoriginconnect', {
     acceptConnection: function(accept) {
       replied = true;
       data.port.postMessage({connectResult: accept});
@@ -91,13 +92,13 @@ function handleForeignConnect(data) {
     data.port.postMessage({connectResult: false});
 }
 
-function handleForeignMessage(event) {
+function handleCrossOriginMessage(event) {
   var ports = [];
   for (var i = 0; i < event.ports; ++i) {
     if (event.ports[i] != event.data.port) ports.push(even.ports[i]);
   }
-  var foreignMessageEvent = {
-    data: event.data[kForeignMessageMessageTag],
+  var crossOriginMessageEvent = {
+    data: event.data[kCrossOriginMessageMessageTag],
     ports: ports,
     source: {
       postMessage: function(msg, transfer) {
@@ -105,18 +106,18 @@ function handleForeignMessage(event) {
       }
     }
   };
-  dispatchCustomEvent('foreignmessage', foreignMessageEvent);
+  dispatchCustomEvent('crossoriginmessage', crossOriginMessageEvent);
 }
 
 self.addEventListener('message', function(event) {
   // In the real world this should be more careful about what messages to listen to.
-  if (kForeignConnectMessageTag in event.data) {
-    handleForeignConnect(event.data);
+  if (kCrossOriginConnectMessageTag in event.data) {
+    handleCrossOriginConnect(event.data);
     event.stopImmediatePropagation();
     return;
   }
-  if (kForeignMessageMessageTag in event.data) {
-    handleForeignMessage(event);
+  if (kCrossOriginMessageMessageTag in event.data) {
+    handleCrossOriginMessage(event);
     event.stopImmediatePropagation();
     return;
   }
