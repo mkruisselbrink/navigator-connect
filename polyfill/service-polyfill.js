@@ -67,7 +67,7 @@ self.addEventListener('fetch', function(event) {
             "};\n" +
             "e.data.connect.postMessage({connected: client_channel.port2}, [client_channel.port2]);\n" +
           "};\n" +
-          "navigator.serviceWorker.controller.postMessage({" + kCrossOriginConnectMessageTag + ": document.location.href, port: service_channel.port2}, [service_channel.port2]);\n" +
+          "navigator.serviceWorker.controller.postMessage({" + kCrossOriginConnectMessageTag + ": document.location.href, origin: e.origin, port: service_channel.port2}, [service_channel.port2]);\n" +
         "}\n" +
       "};</script>",
                  {headers: {'content-type': 'text/html'}})
@@ -75,21 +75,41 @@ self.addEventListener('fetch', function(event) {
   event.stopImmediatePropagation();
 });
 
+function CrossOriginServiceWorkerClient(origin, targetUrl, port) {
+  this.origin = origin;
+  this.targetUrl = targetUrl;
+  this.port_ = port;
+};
+
+CrossOriginServiceWorkerClient.prototype.postMessage =
+    function(message, transfer) {
+  this.port_.postMessage(message, transfer);
+};
+
+function CrossOriginConnectEvent(client, port) {
+  this.client = client;
+  this.replied_ = false;
+  this.port_ = port;
+};
+
+CrossOriginConnectEvent.prototype.acceptConnection = function(accept) {
+  this.replied_ = true;
+  this.port_.postMessage({connectResult: accept});
+};
+
 function handleCrossOriginConnect(data) {
-  var replied = false;
   var targetUrl = data[kCrossOriginConnectMessageTag];
   if (targetUrl.indexOf(kUrlSuffix, targetUrl.length - kUrlSuffix.length) !== -1) {
     targetUrl = targetUrl.substr(0, targetUrl.length - kUrlSuffix.length);
   }
-  dispatchCustomEvent('crossoriginconnect', {
-    acceptConnection: function(accept) {
-      replied = true;
-      data.port.postMessage({connectResult: accept});
-    },
-    targetUrl: targetUrl
-  });
-  if (!replied)
+
+  var client =
+      new CrossOriginServiceWorkerClient(data.origin, targetUrl, undefined);
+  var connectEvent = new CrossOriginConnectEvent(client, data.port);
+  dispatchCustomEvent('crossoriginconnect', connectEvent);
+  if (!connectEvent.replied_) {
     data.port.postMessage({connectResult: false});
+  }
 }
 
 function handleCrossOriginMessage(event) {
