@@ -63,7 +63,7 @@ self.addEventListener('fetch', function(event) {
               "msg_channel.port1.onmessage = function(em) {\n" +
                 "client_channel.port1.postMessage(em.data, em.ports);\n" +
               "};\n" +
-              "navigator.serviceWorker.controller.postMessage({" + kCrossOriginMessageMessageTag + ": ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
+              "navigator.serviceWorker.controller.postMessage({" + kCrossOriginMessageMessageTag + ": document.location.href, origin: ec.origin, data: ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
             "};\n" +
             "e.data.connect.postMessage({connected: client_channel.port2}, [client_channel.port2]);\n" +
           "};\n" +
@@ -82,8 +82,8 @@ function CrossOriginServiceWorkerClient(origin, targetUrl, port) {
 };
 
 CrossOriginServiceWorkerClient.prototype.postMessage =
-    function(message, transfer) {
-  this.port_.postMessage(message, transfer);
+    function(msg, transfer) {
+  this.port_.postMessage(msg, transfer);
 };
 
 function CrossOriginConnectEvent(client, port) {
@@ -117,14 +117,18 @@ function handleCrossOriginMessage(event) {
   for (var i = 0; i < event.ports; ++i) {
     if (event.ports[i] != event.data.port) ports.push(even.ports[i]);
   }
+
+  var targetUrl = event.data[kCrossOriginMessageMessageTag];
+  if (targetUrl.indexOf(kUrlSuffix, targetUrl.length - kUrlSuffix.length) !== -1) {
+    targetUrl = targetUrl.substr(0, targetUrl.length - kUrlSuffix.length);
+  }
+
+  var client = new CrossOriginServiceWorkerClient(
+      event.data.origin, targetUrl, event.data.port);
   var crossOriginMessageEvent = {
-    data: event.data[kCrossOriginMessageMessageTag],
+    data: event.data.data,
     ports: ports,
-    source: {
-      postMessage: function(msg, transfer) {
-        event.data.port.postMessage(msg, transfer);
-      }
-    }
+    source: client
   };
   dispatchCustomEvent('crossoriginmessage', crossOriginMessageEvent);
 }
