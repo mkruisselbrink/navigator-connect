@@ -63,11 +63,11 @@ self.addEventListener('fetch', function(event) {
               "msg_channel.port1.onmessage = function(em) {\n" +
                 "client_channel.port1.postMessage(em.data, em.ports);\n" +
               "};\n" +
-              "navigator.serviceWorker.controller.postMessage({" + kCrossOriginMessageMessageTag + ": ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
+              "navigator.serviceWorker.controller.postMessage({" + kCrossOriginMessageMessageTag + ": document.location.href, origin: ec.origin, data: ec.data, port: msg_channel.port2}, [msg_channel.port2]);\n" +
             "};\n" +
             "e.data.connect.postMessage({connected: client_channel.port2}, [client_channel.port2]);\n" +
           "};\n" +
-          "navigator.serviceWorker.controller.postMessage({" + kCrossOriginConnectMessageTag + ": document.location.href, port: service_channel.port2}, [service_channel.port2]);\n" +
+          "navigator.serviceWorker.controller.postMessage({" + kCrossOriginConnectMessageTag + ": document.location.href, origin: e.origin, port: service_channel.port2}, [service_channel.port2]);\n" +
         "}\n" +
       "};</script>",
                  {headers: {'content-type': 'text/html'}})
@@ -75,21 +75,41 @@ self.addEventListener('fetch', function(event) {
   event.stopImmediatePropagation();
 });
 
+function CrossOriginServiceWorkerClient(origin, targetUrl, port) {
+  this.origin = origin;
+  this.targetUrl = targetUrl;
+  this.port_ = port;
+};
+
+CrossOriginServiceWorkerClient.prototype.postMessage =
+    function(msg, transfer) {
+  this.port_.postMessage(msg, transfer);
+};
+
+function CrossOriginConnectEvent(client, port) {
+  this.client = client;
+  this.replied_ = false;
+  this.port_ = port;
+};
+
+CrossOriginConnectEvent.prototype.acceptConnection = function(accept) {
+  this.replied_ = true;
+  this.port_.postMessage({connectResult: accept});
+};
+
 function handleCrossOriginConnect(data) {
-  var replied = false;
   var targetUrl = data[kCrossOriginConnectMessageTag];
   if (targetUrl.indexOf(kUrlSuffix, targetUrl.length - kUrlSuffix.length) !== -1) {
     targetUrl = targetUrl.substr(0, targetUrl.length - kUrlSuffix.length);
   }
-  dispatchCustomEvent('crossoriginconnect', {
-    acceptConnection: function(accept) {
-      replied = true;
-      data.port.postMessage({connectResult: accept});
-    },
-    targetUrl: targetUrl
-  });
-  if (!replied)
+
+  var client =
+      new CrossOriginServiceWorkerClient(data.origin, targetUrl, undefined);
+  var connectEvent = new CrossOriginConnectEvent(client, data.port);
+  dispatchCustomEvent('crossoriginconnect', connectEvent);
+  if (!connectEvent.replied_) {
     data.port.postMessage({connectResult: false});
+  }
 }
 
 function handleCrossOriginMessage(event) {
@@ -97,14 +117,18 @@ function handleCrossOriginMessage(event) {
   for (var i = 0; i < event.ports; ++i) {
     if (event.ports[i] != event.data.port) ports.push(even.ports[i]);
   }
+
+  var targetUrl = event.data[kCrossOriginMessageMessageTag];
+  if (targetUrl.indexOf(kUrlSuffix, targetUrl.length - kUrlSuffix.length) !== -1) {
+    targetUrl = targetUrl.substr(0, targetUrl.length - kUrlSuffix.length);
+  }
+
+  var client = new CrossOriginServiceWorkerClient(
+      event.data.origin, targetUrl, event.data.port);
   var crossOriginMessageEvent = {
-    data: event.data[kCrossOriginMessageMessageTag],
+    data: event.data.data,
     ports: ports,
-    source: {
-      postMessage: function(msg, transfer) {
-        event.data.port.postMessage(msg, transfer);
-      }
-    }
+    source: client
   };
   dispatchCustomEvent('crossoriginmessage', crossOriginMessageEvent);
 }
