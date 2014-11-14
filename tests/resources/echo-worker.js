@@ -1,10 +1,10 @@
 importScripts('../../polyfill/service-polyfill.js');
 
-self.addEventListener('foreignconnect', function(event) {
+self.addEventListener('crossoriginconnect', function(event) {
   event.acceptConnection(true);
 });
 
 
-self.addEventListener('foreignmessage', function(event) {
+self.addEventListener('crossoriginmessage', function(event) {
   event.source.postMessage(event.data, event.ports);
 });

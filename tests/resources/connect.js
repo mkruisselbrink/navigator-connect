@@ -19,7 +19,7 @@ promise_test(function(test) {
         }),
       'AbortError',
       'navigator.connect should fail with an AbortError');
-  }, 'Connection fails if service worker doesn\'t handle onforeignconnect.', properties);
+  }, 'Connection fails if service worker doesn\'t handle oncrossoriginconnect.', properties);
 */
 
 promise_test(function(test) {
