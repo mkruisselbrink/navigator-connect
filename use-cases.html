@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Use cases for the navigator.connect() API
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class='remove'>
+</script>
+    <script class="remove">
+// (this is to make tidy happy)
+      // See http://www.w3.org/respec/ for ReSpec documentation.
+      var respecConfig = {
+          specStatus: "unofficial",
+          shortName: "navigator-connect-api",
+          editors: [
+            {
+              name: "Marijn Kruisselbrink",
+              company: "Google",
+              companyURL: "https://www.google.com/"
+            },
+          ],
+          edDraftURI:   "https://mkruisselbrink.github.io/navigator-connect/use-cases.html",
+          noLegacyStyle: true,
+
+          otherLinks: [{
+            key: "Participate",
+            data: [
+              { value: "File bugs and feature requests",
+                href: "https://github.com/mkruisselbrink/navigator-connect/issues",
+              },
+              { value: "Fix the text through GitHub",
+                href: "https://github.com/mkruisselbrink/navigator-connect",
+              },
+            ],
+          }],
+      };
+    </script>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+        This document provides a collection of use cases for cross origin communication between
+        service workers and webpages.
+      </p>
+    </section>
+    <section id='sotd'></section>
+    <section id="usecases">
+      <h2>
+        Use-Cases
+      </h2>
+    </section>
+    <section id="security+privacy">
+      <h2>
+        Security and Privacy Considerations
+      </h2>
+      <p>
+        User agents should not leak any information on sites a user has visited etc to other
+        webpages, unless the visited site opts in. In particular this means that a service
+        rejecting a connection attempt should be indistinguishable from no service being installed
+        to service a particular URL.
+      </p>
+      <p class="issue">
+        If attempting to connect to a service can trigger installation of a service worker, we need
+        to fill in the security and privacy concerns around doing that.
+      </p>
+    </section>
+  </body>
+</html>
