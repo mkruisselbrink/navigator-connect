@@ -46,10 +46,53 @@
       </p>
     </section>
     <section id='sotd'></section>
+    <section>
+      <h2>
+        Introduction
+      </h2>
+      <p>
+        This document will use the term <code><dfn>navigator.connect</dfn>()</code> to refer to the
+        notional API that allows cross-origin communication between service workers and web pages.
+        This isn't intended to presuppose the final shape of the API, although we don't know of any
+        alternate proposals.
+      </p>
+    </section>
     <section id="usecases">
       <h2>
         Use-Cases
       </h2>
+      <section id='analytics'>
+        <h2>
+          Offline Analytics
+        </h2>
+        <p>
+          Third party analytics platforms expose their services via REST interfaces. Thus, these
+          platforms are unable to provide insights about offline behavior. As <a>Service
+          Worker</a>s and offline web apps become more prevalent, the need for analytics platforms
+          that function offline will continue to grow.
+        </p>
+        <p>
+          <code><a>navigator.connect</a></code> enables third party analytics platforms to register
+          <a>Service Worker</a>s that expose APIs to track metrics both online and offline. These
+          <a>Service Worker</a>s are then able to report these metrics when connectivity is
+          reestablished so that they can be consumed by the developer. Furthermore, this reporting
+          can be implemented with background sync to take advantage of times when the user’s
+          experience will not be impacted—for example, avoiding saturating the network with
+          non-essential requests when the user is struggling with poor connectivity or on a heavily
+          metered/throttled mobile plan. Thus, exposing analytics APIs via <a>Service Worker</a>s
+          allows third party analytics platforms to reduce their performance costs even when
+          online.
+        </p>
+        <p>
+          Note that without <code><a>navigator.connect</a></code>, a web app frontend could report
+          metrics to an analytics platform <a>Service Worker</a> via communication through an
+          iframe. However, a web app’s <a>Service Worker</a> would not be able to communicate with
+          the analytics platform in this way. Web app <a>Service Worker</a>s perform crucial
+          tasks—both online and offline—that are valuable for developers to track.
+          <code><a>navigator.connect</a></code> enables the <a>Service Worker</a> to <a>Service
+          Worker</a> communication that is necessary for this robust web app analytics model.
+        </p>
+      </section>
     </section>
     <section id="security+privacy">
       <h2>
@@ -65,6 +108,20 @@
         If attempting to connect to a service can trigger installation of a service worker, we need
         to fill in the security and privacy concerns around doing that.
       </p>
+    </section>
+    <section id='glossary' class='appendix'>
+      <h2>
+        Glossary
+      </h2>
+      <dl>
+        <dt>
+          <dfn>Service Worker</dfn>
+        </dt>
+        <dd>
+          Defined in <a href=
+          "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html">https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html</a>.
+        </dd>
+      </dl>
     </section>
   </body>
 </html>
