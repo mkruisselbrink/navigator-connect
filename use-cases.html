@@ -142,6 +142,34 @@
           without-<code><a>navigator.connect</a></code> implementations.
         </p>
       </section>
+      <section id='extension'>
+        <h2>
+          Extending the platform
+        </h2>
+        <p>
+          <em>This use case is unlikely to drive aspects of the proposed API. We will need detailed
+          analysis of how to make this use safe for the web before recommending it.</em>
+        </p>
+        <p>
+          Browser vendors would like to have a way to experiment with APIs that access new platform
+          features. Dimitri Glazkov has a <a href="https://github.com/dglazkov/tubes">proposal</a>
+          to use a <code><a>navigator.connect</a></code>-like API to "drill through the bedrock" by
+          connecting to a system-provided endpoint. The idea is that, for proposed APIs that can
+          afford <code>postMessage</code> overhead on every call, the browser would define that
+          <code>navigator.connect('https://browser.example.com/<var>raiQu6up</var>/theNewApiName')</code>
+          connects to code built into the browser instead of to a normal <a>Service Worker</a>.
+          ("<code><var>raiQu6up</var></code>" is a random value that can be rotated to ensure that
+          pages using the experimental API expect to need maintenance in order to keep working.)
+          This is thought to be better than a vendor-specific JavaScript entry point because web
+          developers are more used to changes in resources behind URLs.
+        </p>
+        <p>
+          As with the other use cases, this can be accomplished for foreground tabs using an
+          <code>&lt;iframe src="<var>implementation://defined.uri/</var>"&gt;</code> combined with
+          <code>postMessage</code>. <code><a>navigator.connect</a></code> is required to do the
+          same thing from a Worker.
+        </p>
+      </section>
     </section>
     <section id="security+privacy">
       <h2>
