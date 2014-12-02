@@ -98,16 +98,35 @@
           Cloud Storage Platforms
         </h2>
         <p>
-          Suppose Google Drive offers a <a>Service Worker</a> that provides access to the user’s files in the cloud, as well as a caching mechanism that keeps high priority files available for offline access. We want to implement a web app for offline document reading on both mobile and desktop called Readle.
+          Suppose Google Drive offers a <a>Service Worker</a> that provides access to the user’s
+          files in the cloud, as well as a caching mechanism that keeps high priority files
+          available for offline access. We want to implement a web app for offline document reading
+          on both mobile and desktop called Readle.
         </p>
         <p>
-          When the user saves an online document to Readle, Readle’s <a>Service Worker</a> loads the document into temporary storage and uses the Drive API—exposed by the Drive <a>Service Worker</a> via <a>navigator.connect</a>—to save the document to the cloud. Without <a>navigator.connect</a>, Readle’s frontend would have to take care of this work, and the saving of a large document could be interrupted if the frontend were closed prematurely.
+          When the user saves an online document to Readle, Readle’s <a>Service Worker</a> loads
+          the document into temporary storage and uses the Drive API—exposed by the Drive
+          <a>Service Worker</a> via <a>navigator.connect</a>—to save the document to the cloud.
+          Without <a>navigator.connect</a>, Readle’s frontend would have to take care of this work,
+          and the saving of a large document could be interrupted if the frontend were closed
+          prematurely.
         </p>
         <p>
-          Once a document is saved to Drive, it is added to a queue of documents to read with Readle. On desktop, hard drive space can be plentiful, so Readle keeps many documents in the Drive <a>Service Worker</a>’s cache. On mobile, storage is a scarcer resource, so Readle selectively tells the Drive <a>Service Worker</a> to cache only the next few documents in the queue.
+          Once a document is saved to Drive, it is added to a queue of documents to read with
+          Readle. On desktop, hard drive space can be plentiful, so Readle keeps many documents in
+          the Drive <a>Service Worker</a>’s cache. On mobile, storage is a scarcer resource, so
+          Readle selectively tells the Drive <a>Service Worker</a> to cache only the next few
+          documents in the queue.
         </p>
         <p>
-          Suppose the user reads a few documents from the top of Readle’s queue on her desktop. In a world without <a>navigator.connect</a>, Readle on the user’s mobile device can’t start syncing the new top of the queue until the frontend is loaded. With <a>navigator.connect</a>, Readle can use push messaging to send the new top of the queue to its mobile <a>Service Worker</a>, which can then notify the Drive <a>Service Worker</a> which new documents to cache. With sufficient notice, Drive's <a>Service Worker</a> can intelligently pull down these files in the background such that they are available quickly and offline the next time the user opens Readle on the mobile web.
+          Suppose the user reads a few documents from the top of Readle’s queue on her desktop. In
+          a world without <a>navigator.connect</a>, Readle on the user’s mobile device can’t start
+          syncing the new top of the queue until the frontend is loaded. With
+          <a>navigator.connect</a>, Readle can use push messaging to send the new top of the queue
+          to its mobile <a>Service Worker</a>, which can then notify the Drive <a>Service
+          Worker</a> which new documents to cache. With sufficient notice, Drive's <a>Service
+          Worker</a> can intelligently pull down these files in the background such that they are
+          available quickly and offline the next time the user opens Readle on the mobile web.
         </p>
       </section>
       <section id='fonts'>
