@@ -6,7 +6,7 @@ Making direct connections between cross-origin Javascript contexts.
 Documents in this repository
 ----------------------------
 
-* TODO: Use Cases and Security Requirements
+* [Use Cases and Security Requirements](https://mkruisselbrink.github.io/navigator-connect/use-cases.html)
 * TODO: Explainer
 * [Specification](https://mkruisselbrink.github.io/navigator-connect/)
 

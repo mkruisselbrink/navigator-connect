@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Use cases for the navigator.connect() API
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class='remove'>
+</script>
+    <script class="remove">
+// (this is to make tidy happy)
+      // See http://www.w3.org/respec/ for ReSpec documentation.
+      var respecConfig = {
+          specStatus: "unofficial",
+          shortName: "navigator-connect-api",
+          editors: [
+            {
+              name: "Marijn Kruisselbrink",
+              company: "Google",
+              companyURL: "https://www.google.com/"
+            },
+          ],
+          edDraftURI:   "https://mkruisselbrink.github.io/navigator-connect/use-cases.html",
+          noLegacyStyle: true,
+
+          otherLinks: [{
+            key: "Participate",
+            data: [
+              { value: "File bugs and feature requests",
+                href: "https://github.com/mkruisselbrink/navigator-connect/issues",
+              },
+              { value: "Fix the text through GitHub",
+                href: "https://github.com/mkruisselbrink/navigator-connect",
+              },
+            ],
+          }],
+      };
+    </script>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+        This document provides a collection of use cases for cross origin communication between
+        service workers and webpages.
+      </p>
+    </section>
+    <section id='sotd'></section>
+    <section>
+      <h2>
+        Introduction
+      </h2>
+      <p>
+        This document will use the term <code><dfn>navigator.connect</dfn>()</code> to refer to the
+        notional API that allows cross-origin communication between service workers and web pages.
+        This isn't intended to presuppose the final shape of the API, although we don't know of any
+        alternate proposals.
+      </p>
+    </section>
+    <section id="usecases">
+      <h2>
+        Use-Cases
+      </h2>
+      <section id='analytics'>
+        <h2>
+          Offline Analytics
+        </h2>
+        <p>
+          Third party analytics platforms expose their services via REST interfaces. Thus, these
+          platforms are unable to provide insights about offline behavior. As <a>Service
+          Worker</a>s and offline web apps become more prevalent, the need for analytics platforms
+          that function offline will continue to grow.
+        </p>
+        <p>
+          <code><a>navigator.connect</a></code> enables third party analytics platforms to register
+          <a>Service Worker</a>s that expose APIs to track metrics both online and offline. These
+          <a>Service Worker</a>s are then able to report these metrics when connectivity is
+          reestablished so that they can be consumed by the developer. Furthermore, this reporting
+          can be implemented with background sync to take advantage of times when the user’s
+          experience will not be impacted—for example, avoiding saturating the network with
+          non-essential requests when the user is struggling with poor connectivity or on a heavily
+          metered/throttled mobile plan. Thus, exposing analytics APIs via <a>Service Worker</a>s
+          allows third party analytics platforms to reduce their performance costs even when
+          online.
+        </p>
+        <p>
+          Note that without <code><a>navigator.connect</a></code>, a web app frontend could report
+          metrics to an analytics platform <a>Service Worker</a> via communication through an
+          iframe. However, a web app’s <a>Service Worker</a> would not be able to communicate with
+          the analytics platform in this way. Web app <a>Service Worker</a>s perform crucial
+          tasks—both online and offline—that are valuable for developers to track.
+          <code><a>navigator.connect</a></code> enables the <a>Service Worker</a> to <a>Service
+          Worker</a> communication that is necessary for this robust web app analytics model.
+        </p>
+      </section>
+      <section id='storage'>
+        <h2>
+          Cloud Storage Platforms
+        </h2>
+        <p>
+          Suppose Google Drive offers a <a>Service Worker</a> that provides access to the user’s
+          files in the cloud, as well as a caching mechanism that keeps high priority files
+          available for offline access. We want to implement a web app for offline document reading
+          on both mobile and desktop called Readle.
+        </p>
+        <p>
+          When the user saves an online document to Readle, Readle’s <a>Service Worker</a> loads
+          the document into temporary storage and uses the Drive API—exposed by the Drive
+          <a>Service Worker</a> via <a>navigator.connect</a>—to save the document to the cloud.
+          Without <a>navigator.connect</a>, Readle’s frontend would have to take care of this work,
+          and the saving of a large document could be interrupted if the frontend were closed
+          prematurely.
+        </p>
+        <p>
+          Once a document is saved to Drive, it is added to a queue of documents to read with
+          Readle. On desktop, hard drive space can be plentiful, so Readle keeps many documents in
+          the Drive <a>Service Worker</a>’s cache. On mobile, storage is a scarcer resource, so
+          Readle selectively tells the Drive <a>Service Worker</a> to cache only the next few
+          documents in the queue.
+        </p>
+        <p>
+          Suppose the user reads a few documents from the top of Readle’s queue on her desktop. In
+          a world without <a>navigator.connect</a>, Readle on the user’s mobile device can’t start
+          syncing the new top of the queue until the frontend is loaded. With
+          <a>navigator.connect</a>, Readle can use push messaging to send the new top of the queue
+          to its mobile <a>Service Worker</a>, which can then notify the Drive <a>Service
+          Worker</a> which new documents to cache. With sufficient notice, Drive's <a>Service
+          Worker</a> can intelligently pull down these files in the background such that they are
+          available quickly and offline the next time the user opens Readle on the mobile web.
+        </p>
+      </section>
+      <section id='fonts'>
+        <h2>
+          Shared fonts
+        </h2>
+        <p>
+          Fonts are a shared resource where latency is critical. People expect the text on a web
+          page to be readable while the images and/or videos load. Latin fonts are 50-200 KB and
+          download in 0.5 to 1.0 seconds, which is sluggish but acceptable. Chinese/Japanese/Korean
+          (CJK) fonts are 4-20 MB and download in 10 to 30+ seconds, which is unacceptably slow.
+          Having a way to preload and persist fonts locally (say, in IndexedDB) provides a much
+          better user experience for CJK (and also Latin) users. However, local persistence
+          mechanisms (e.g. IndexedDB) are domain specific: if the same font is used in multiple
+          domains, it must be persisted separately for each domain. Although cache hits in the URL
+          cache can somewhat help reduce the total download bandwidth for a font, it is still
+          likely to be downloaded many times. If 100 sites use the same font then it will need to
+          be persisted separately 100 times. Having a cross domain service reduces unnecessary
+          latency and storage costs for fonts (and other such shared resources).
+        </p>
+        <p>
+          Such a cross domain service can be implemented in the form of a <a>Service Worker</a> and
+          <code><a>navigator.connect</a></code> protocols. This implementation opens up additional
+          opportunities as well. For instance, the <a>Service Worker</a> can use the <a>background
+          sync API</a> to schedule rationalization and optimization work when the network and CPU
+          are idle, including:
+        </p>
+        <ul>
+          <li>Optimizing the cache for efficiency by removing rarely used fonts
+          </li>
+          <li>Fetching complete fonts to replace previously downloaded subsets
+          </li>
+          <li>Updating fonts to their newest versions
+          </li>
+          <li>Automatically fetching the most popular fonts for a given user
+          </li>
+        </ul>
+        <p>
+          Note that a shared fonts service could be implemented without
+          <code><a>navigator.connect</a></code>, although it would be quite awkward. With
+          <code><a>navigator.connect</a></code>, the optimization can happen in the background,
+          with a web app’s <a>Service Worker</a> handling the front end’s font request and
+          communicating with the shared fonts service as necessary. In this way,
+          <code><a>navigator.connect</a></code> enables a transparent and elegant solution that
+          avoids the need to alter CSS loading.
+        </p>
+        <p class='issue'>
+          TODO(slightlyoff): add more details on the difference between the with- and
+          without-<code><a>navigator.connect</a></code> implementations.
+        </p>
+      </section>
+      <section id='extension'>
+        <h2>
+          Extending the platform
+        </h2>
+        <p>
+          <em>This use case is unlikely to drive aspects of the proposed API. We will need detailed
+          analysis of how to make this use safe for the web before recommending it.</em>
+        </p>
+        <p>
+          Browser vendors would like to have a way to experiment with APIs that access new platform
+          features. Dimitri Glazkov has a <a href="https://github.com/dglazkov/tubes">proposal</a>
+          to use a <code><a>navigator.connect</a></code>-like API to "drill through the bedrock" by
+          connecting to a system-provided endpoint. The idea is that, for proposed APIs that can
+          afford <code>postMessage</code> overhead on every call, the browser would define that
+          <code>navigator.connect('https://browser.example.com/path/theNewApiName')</code> connects
+          to code built into the browser instead of to a normal <a>Service Worker</a>.
+        </p>
+        <p>
+          As with the other use cases, this can be accomplished for foreground tabs using an
+          <code>&lt;iframe src="<var>implementation://defined.uri/</var>"&gt;</code> combined with
+          <code>postMessage</code>. <code><a>navigator.connect</a></code> is required to do the
+          same thing from a Worker.
+        </p>
+        <p>
+          There's a risk that when a browser defines a URL endpoint for
+          <code><a>navigator.connect</a></code>, websites will become dependent on that endpoint in
+          the same way they became dependent on vendor-prefixed Javascript and CSS names. The
+          browser may then be unable to remove or change the meaning of that URL, negating the
+          benefit of using <code><a>navigator.connect</a></code> to experiment. We can mitigate
+          this in a few ways:
+        </p>
+        <ul>
+          <li>Web developers already have experience with resources behind URLs disappearing or
+          changing, so they may spontaneously write pages that are more resilient.
+          </li>
+          <li>We could include a rotating identifier in the path to the API. If this identifier
+          changes frequently, developers who aren't actively maintaining their sites won't have
+          time to build up to the point that it constrains the browser. The rotating identifier
+          could be either a counter/version number or a string that's randomly generated at each
+          rotation. Developers who want to avoid needing to maintain their use of the experimental
+          API could write a function to search for the newest version number, but this would be
+          impossible with the random string.
+          </li>
+        </ul>
+      </section>
+    </section>
+    <section id="security+privacy">
+      <h2>
+        Security and Privacy Considerations
+      </h2>
+      <p>
+        User agents should not leak any information on sites a user has visited etc to other
+        webpages, unless the visited site opts in. In particular this means that a service
+        rejecting a connection attempt should be indistinguishable from no service being installed
+        to service a particular URL.
+      </p>
+      <p class="issue">
+        If attempting to connect to a service can trigger installation of a service worker, we need
+        to fill in the security and privacy concerns around doing that.
+      </p>
+    </section>
+    <section id='glossary' class='appendix'>
+      <h2>
+        Glossary
+      </h2>
+      <dl>
+        <dt>
+          <dfn>Background Sync API</dfn>
+        </dt>
+        <dd>
+          See <a href=
+          "https://github.com/slightlyoff/BackgroundSync/">https://github.com/slightlyoff/BackgroundSync/</a>.
+        </dd>
+        <dt>
+          <dfn>Service Worker</dfn>
+        </dt>
+        <dd>
+          See <a href=
+          "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html">https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html</a>.
+        </dd>
+      </dl>
+    </section>
+  </body>
+</html>
