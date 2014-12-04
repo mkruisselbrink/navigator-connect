@@ -141,16 +141,19 @@
           (CJK) fonts are 4-20 MB and download in 10 to 30+ seconds, which is unacceptably slow.
         </p>
         <p>
-          Having a way to preload and persist fonts locally provides a much better user experience
-          for CJK (and also Latin) users. The browser cache provides a rudimentary persistence
-          mechanism, allowing a font drawn from a given URL to be retrieved from the server once
-          and served locally many times. However, the browser cache falls short in many dimensions.
-          For example, the font cannot be pre-fetched when bandwidth is abundant; it must be
-          retrieved from the server the first time it is requested, leading to poor first-load
-          performance for the requesting web page. Since the cached font cannot be updated
-          automatically as soon as the cache becomes stale, this load performance hit is
-          experienced whenever the font changes. Additionally, when the cache is stale, the entire
-          font must be refreshed, as opposed to efficiently downloading the deltas.
+          Having a way to preload and persist fonts locally can provide a much better user
+          experience for CJK (and also Latin) users. The browser cache provides a rudimentary
+          persistence mechanism, allowing a font drawn from a given URL to be retrieved from the
+          server once and served locally many times. However, the browser cache falls short of the
+          ideal implementation. For example, when a font is changed, the browser cache does not
+          realize it is stale until a web page next requests the font. The
+          <code>stale-while-revalidate</code> Cache-Control extension can allow the requesting web
+          page to use the stale font without delay, but the request will cause the new font to be
+          downloaded while the user is actively using the network for other purposes. In an ideal
+          world, the download would be performed intelligently via background sync at a time when
+          bandwidth is abundant and cheap. Additionally, a smarter persistance method would
+          efficiently download the font deltas, which are undoubtedly far smaller than the entire
+          font.
         </p>
         <p>
           Alternatively to the browser cache, local persistence mechanisms such as IndexedDB can be
