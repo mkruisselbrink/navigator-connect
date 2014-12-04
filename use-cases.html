@@ -147,7 +147,7 @@
           server once and served locally many times. However, the browser cache falls short of the
           ideal implementation. For example, when a font is changed, the browser cache does not
           realize it is stale until a web page next requests the font. The
-          <code>stale-while-revalidate</code> Cache-Control extension can allow the requesting web
+          <code><a>stale-while-revalidate<a></code> Cache-Control extension can allow the requesting web
           page to use the stale font without delay, but the request will cause the new font to be
           downloaded while the user is actively using the network for other purposes. In an ideal
           world, the download would be performed intelligently via background sync at a time when
@@ -273,6 +273,13 @@
         <dd>
           See <a href=
           "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html">https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html</a>.
+        </dd>
+        <dt>
+          <code><dfn>stale-while-revalidate</dfn></code>
+        </dt>
+        <dd>
+          See <a href=
+          "http://tools.ietf.org/html/rfc5861#section-3">http://tools.ietf.org/html/rfc5861#section-3</a>.
         </dd>
       </dl>
     </section>
