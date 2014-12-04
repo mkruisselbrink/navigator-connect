@@ -146,11 +146,14 @@
           persistence mechanism, allowing a font drawn from a given URL to be retrieved from the
           server once and served locally many times. However, the browser cache falls short of the
           ideal implementation. For example, when a font is changed, the browser cache does not
-          realize it is stale until a web page next requests the font. At this point, the browser
-          cache immediately hits the server to pull down the new font. In an ideal world, this
-          request could be performed intelligently via background sync at a time when bandwidth is
-          abundant and cheap. Additionally, a smarter persistance method could efficiently download
-          the font deltas, which are undoubtedly far smaller than the entire font.
+          realize it is stale until a web page next requests the font. The
+          <code>stale-while-revalidate</code> Cache-Control extension can allow the requesting web
+          page to use the stale font without delay, but the request will cause the new font to be
+          downloaded while the user is actively using the network for other purposes. In an ideal
+          world, the download would be performed intelligently via background sync at a time when
+          bandwidth is abundant and cheap. Additionally, a smarter persistance method would
+          efficiently download the font deltas, which are undoubtedly far smaller than the entire
+          font.
         </p>
         <p>
           Alternatively to the browser cache, local persistence mechanisms such as IndexedDB can be
