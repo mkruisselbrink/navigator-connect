@@ -106,10 +106,10 @@
         <p>
           When the user saves an online document to Readle, Readle’s <a>Service Worker</a> loads
           the document into temporary storage and uses the Drive API—exposed by the Drive
-          <a>Service Worker</a> via <a>navigator.connect</a>—to save the document to the cloud.
-          Without <a>navigator.connect</a>, Readle’s frontend would have to take care of this work,
-          and the saving of a large document could be interrupted if the frontend were closed
-          prematurely.
+          <a>Service Worker</a> via <code><a>navigator.connect</a></code>—to save the document to
+          the cloud. Without <code><a>navigator.connect</a></code>, Readle’s frontend would have to
+          take care of this work, and the saving of a large document could be interrupted if the
+          frontend were closed prematurely.
         </p>
         <p>
           Once a document is saved to Drive, it is added to a queue of documents to read with
@@ -120,39 +120,52 @@
         </p>
         <p>
           Suppose the user reads a few documents from the top of Readle’s queue on her desktop. In
-          a world without <a>navigator.connect</a>, Readle on the user’s mobile device can’t start
-          syncing the new top of the queue until the frontend is loaded. With
-          <a>navigator.connect</a>, Readle can use push messaging to send the new top of the queue
-          to its mobile <a>Service Worker</a>, which can then notify the Drive <a>Service
-          Worker</a> which new documents to cache. With sufficient notice, Drive's <a>Service
-          Worker</a> can intelligently pull down these files in the background such that they are
-          available quickly and offline the next time the user opens Readle on the mobile web.
+          a world without <code><a>navigator.connect</a></code>, Readle on the user’s mobile device
+          can’t start syncing the new top of the queue until the frontend is loaded. With
+          <code><a>navigator.connect</a></code>, Readle can use push messaging to send the new top
+          of the queue to its mobile <a>Service Worker</a>, which can then notify the Drive
+          <a>Service Worker</a> which new documents to cache. With sufficient notice, Drive's
+          <a>Service Worker</a> can intelligently pull down these files in the background such that
+          they are available quickly and offline the next time the user opens Readle on the mobile
+          web.
         </p>
       </section>
       <section id='fonts'>
         <h2>
-          Shared fonts
+          Shared Fonts
         </h2>
         <p>
           Fonts are a shared resource where latency is critical. People expect the text on a web
           page to be readable while the images and/or videos load. Latin fonts are 50-200 KB and
           download in 0.5 to 1.0 seconds, which is sluggish but acceptable. Chinese/Japanese/Korean
           (CJK) fonts are 4-20 MB and download in 10 to 30+ seconds, which is unacceptably slow.
-          Having a way to preload and persist fonts locally (say, in IndexedDB) provides a much
-          better user experience for CJK (and also Latin) users. However, local persistence
-          mechanisms (e.g. IndexedDB) are domain specific: if the same font is used in multiple
-          domains, it must be persisted separately for each domain. Although cache hits in the URL
-          cache can somewhat help reduce the total download bandwidth for a font, it is still
-          likely to be downloaded many times. If 100 sites use the same font then it will need to
-          be persisted separately 100 times. Having a cross domain service reduces unnecessary
-          latency and storage costs for fonts (and other such shared resources).
         </p>
         <p>
-          Such a cross domain service can be implemented in the form of a <a>Service Worker</a> and
-          <code><a>navigator.connect</a></code> protocols. This implementation opens up additional
-          opportunities as well. For instance, the <a>Service Worker</a> can use the <a>background
-          sync API</a> to schedule rationalization and optimization work when the network and CPU
-          are idle, including:
+          Having a way to preload and persist fonts locally provides a much better user experience
+          for CJK (and also Latin) users. The browser cache provides a rudimentary persistence
+          mechanism, allowing a font drawn from a given URL to be retrieved from the server once
+          and served locally many times. However, the browser cache falls short in many dimensions.
+          For example, the font cannot be pre-fetched when bandwidth is abundant; it must be
+          retrieved from the server the first time it is requested, leading to poor first-load
+          performance for the requesting web page. Since the cached font cannot be updated
+          automatically as soon as the cache becomes stale, this load performance hit is
+          experienced whenever the font changes. Additionally, when the cache is stale, the entire
+          font must be refreshed, as opposed to efficiently downloading the deltas.
+        </p>
+        <p>
+          Alternatively to the browser cache, local persistence mechanisms such as IndexedDB can be
+          used to reduce redundant font requests over the network. However, such local persistence
+          mechanisms are domain specific: if the same font is used in multiple domains, it must be
+          persisted separately for each domain.
+        </p>
+        <p>
+          In contrast, a cross domain service can reduce unnecessary latency and storage costs for
+          fonts (and other such shared resources) with greater customized intelligence than the
+          browser cache. Such a cross domain service can be implemented in the form of a fonts
+          <a>Service Worker</a> and <code><a>navigator.connect</a></code> protocols. This
+          implementation opens up additional opportunities as well. For instance, the fonts
+          <a>Service Worker</a> can use the background sync API to schedule rationalization and
+          optimization work when the network and CPU are idle, including:
         </p>
         <ul>
           <li>Optimizing the cache for efficiency by removing rarely used fonts
@@ -169,7 +182,7 @@
           <code><a>navigator.connect</a></code>, although it would be quite awkward. With
           <code><a>navigator.connect</a></code>, the optimization can happen in the background,
           with a web app’s <a>Service Worker</a> handling the front end’s font request and
-          communicating with the shared fonts service as necessary. In this way,
+          communicating with the shared fonts <a>Service Worker</a> as necessary. In this way,
           <code><a>navigator.connect</a></code> enables a transparent and elegant solution that
           avoids the need to alter CSS loading.
         </p>
@@ -180,7 +193,7 @@
       </section>
       <section id='extension'>
         <h2>
-          Extending the platform
+          Extending the Platform
         </h2>
         <p>
           <em>This use case is unlikely to drive aspects of the proposed API. We will need detailed
