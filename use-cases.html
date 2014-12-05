@@ -52,9 +52,17 @@
       </h2>
       <p>
         This document will use the term <code><dfn>navigator.connect</dfn>()</code> to refer to the
-        notional API that allows cross-origin communication between <a>Service Worker</a>s and web pages.
-        This isn't intended to presuppose the final shape of the API, although we don't know of any
-        alternate proposals.
+        notional API that allows cross-origin communication between <a>Service Worker</a>s and web
+        pages. This isn't intended to presuppose the final shape of the API, although we don't know
+        of any alternate proposals.
+      </p>
+      <p>
+        Cross-origin communication between two web pages or between a web page and a <a>Service
+        Worker</a> is currently possible, using an iframe and channel messaging, for example.
+        However, no such direct communication is possible between two <a>Service Worker</a>s. The
+        use cases in this document are intended to illustrate how communication between two
+        <a>Service Worker</a>s, which is enabled by <code><a>navigator.connect</a></code>, creates
+        opportunities for more intelligent, efficient, and elegant web apps and services.
       </p>
     </section>
     <section id="usecases">
@@ -147,13 +155,13 @@
           server once and served locally many times. However, the browser cache falls short of the
           ideal implementation. For example, when a font is changed, the browser cache does not
           realize it is stale until a web page next requests the font. The
-          <code><a>stale-while-revalidate<a></code> Cache-Control extension can allow the requesting web
-          page to use the stale font without delay, but the request will cause the new font to be
-          downloaded while the user is actively using the network for other purposes. In an ideal
-          world, the download would be performed intelligently via background sync at a time when
-          bandwidth is abundant and cheap. Additionally, a smarter persistance method would
-          efficiently download the font deltas, which are undoubtedly far smaller than the entire
-          font.
+          <code><a>stale-while-revalidate</a></code> Cache-Control extension can allow the
+          requesting web page to use the stale font without delay, but the request will cause the
+          new font to be downloaded while the user is actively using the network for other
+          purposes. In an ideal world, the download would be performed intelligently via background
+          sync at a time when bandwidth is abundant and cheap. Additionally, a smarter persistance
+          method would efficiently download the font deltas, which are undoubtedly far smaller than
+          the entire font.
         </p>
         <p>
           Alternatively to the browser cache, local persistence mechanisms such as IndexedDB can be
