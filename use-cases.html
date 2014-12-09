@@ -202,50 +202,32 @@
           without-<code><a>navigator.connect</a></code> implementations.
         </p>
       </section>
+    </section>
+    <section id="nongoals">
+      <h2>
+        Non-Goals
+      </h2>
       <section id='extension'>
         <h2>
           Extending the Platform
         </h2>
         <p>
-          <em>This use case is unlikely to drive aspects of the proposed API. We will need detailed
-          analysis of how to make this use safe for the web before recommending it.</em>
+          Browsers have a number of ways to expose functionality to web developers. Most commonly,
+          browsers expose standardized Javascript APIs to web pages and Service Workers. However,
+          browsers can expose arbitrary, unstandardized functionality with Javascript APIs as well,
+          although this is uncommon due to the danger of this game. Similarly, browsers can expose
+          platform features via URL endpoints. With current technologies, such exposed APIs could
+          be invoked by web pages through <code>&lt;iframe
+          src="<var>implementation://defined.uri/</var>"&gt;</code> combined with
+          <code>postMessage</code>. <code><a>navigator.connect</a></code> could similarly allow
+          such a URL endpoints to be accessed by Service Workers.
         </p>
         <p>
-          Browser vendors would like to have a way to experiment with APIs that access new platform
-          features. Dimitri Glazkov has a <a href="https://github.com/dglazkov/tubes">proposal</a>
-          to use a <code><a>navigator.connect</a></code>-like API to "drill through the bedrock" by
-          connecting to a system-provided endpoint. The idea is that, for proposed APIs that can
-          afford <code>postMessage</code> overhead on every call, the browser would define that
-          <code>navigator.connect('https://browser.example.com/path/theNewApiName')</code> connects
-          to code built into the browser instead of to a normal <a>Service Worker</a>.
+          However, this use case is a non-goal. It is unlikely to drive aspects of the proposed
+          API. Should exposing platform features to Service Workers via URL endpoints prove
+          valuable in the future, it will require a detailed analysis of how to make it safe for
+          the web before recommending or supporting it.
         </p>
-        <p>
-          As with the other use cases, this can be accomplished for foreground tabs using an
-          <code>&lt;iframe src="<var>implementation://defined.uri/</var>"&gt;</code> combined with
-          <code>postMessage</code>. <code><a>navigator.connect</a></code> is required to do the
-          same thing from a Worker.
-        </p>
-        <p>
-          There's a risk that when a browser defines a URL endpoint for
-          <code><a>navigator.connect</a></code>, websites will become dependent on that endpoint in
-          the same way they became dependent on vendor-prefixed Javascript and CSS names. The
-          browser may then be unable to remove or change the meaning of that URL, negating the
-          benefit of using <code><a>navigator.connect</a></code> to experiment. We can mitigate
-          this in a few ways:
-        </p>
-        <ul>
-          <li>Web developers already have experience with resources behind URLs disappearing or
-          changing, so they may spontaneously write pages that are more resilient.
-          </li>
-          <li>We could include a rotating identifier in the path to the API. If this identifier
-          changes frequently, developers who aren't actively maintaining their sites won't have
-          time to build up to the point that it constrains the browser. The rotating identifier
-          could be either a counter/version number or a string that's randomly generated at each
-          rotation. Developers who want to avoid needing to maintain their use of the experimental
-          API could write a function to search for the newest version number, but this would be
-          impossible with the random string.
-          </li>
-        </ul>
       </section>
     </section>
     <section id="security+privacy">
