@@ -212,11 +212,14 @@
           Extending the Platform
         </h2>
         <p>
-          Browsers can expose arbitrary functionality with Javascript APIs, although they clearly
-          do not due to the danger of this game. Similarly, browsers can expose platform features
-          via URL endpoints. With current technologies, such exposed APIs could be invoked by web
-          pages through <code>&lt;iframe src="<var>implementation://defined.uri/</var>"&gt;</code>
-          combined with postMessage. <code><a>navigator.connect</a></code> could similarly allow
+          Browsers have a number of ways to expose functionality to web developers. Most commonly,
+          browsers expose standardized Javascript APIs to web pages and Service Workers. However,
+          browsers can expose arbitrary, unstandardized functionality with Javascript APIs as well,
+          although this is uncommon due to the danger of this game. Similarly, browsers can expose
+          platform features via URL endpoints. With current technologies, such exposed APIs could
+          be invoked by web pages through <code>&lt;iframe
+          src="<var>implementation://defined.uri/</var>"&gt;</code> combined with
+          <code>postMessage</code>. <code><a>navigator.connect</a></code> could similarly allow
           such a URL endpoints to be accessed by Service Workers.
         </p>
         <p>
