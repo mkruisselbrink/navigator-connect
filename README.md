@@ -7,7 +7,7 @@ Documents in this repository
 ----------------------------
 
 * [Use Cases and Security Requirements](https://mkruisselbrink.github.io/navigator-connect/use-cases.html)
-* TODO: Explainer
+* [Explainer](explainer.md)
 * [Specification](https://mkruisselbrink.github.io/navigator-connect/)
 
 Communication
