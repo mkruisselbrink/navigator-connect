@@ -107,7 +107,7 @@ Service-Worker-Script: scriptURL
 
 Note that in conjuction with these headers, the `Service-Worker-Allowed` header in the response to the actual script fetch, if present, is used to set the maximum scope allowed.
 
-If the `Service-Worker-Scope` header is absent, the maximum scope allowed is the script's location. Otherwise, the maximum scope allowed is what the `Service-Worker-Allowed` header suggests.
+When the `Service-Worker-Scope` header is absent, the scope defaults to the script's location. The maximum scope allowed is the script's location by default, but if the `Service-Worker-Allowed` header is given, the maximum scope allowed is set to its value.
 
 Whenever these headers are present, the browser will install a service worker in the background (not blocking the original request), allowing future communication with the new service worker.
 
