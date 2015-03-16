@@ -21,7 +21,7 @@ The `onfetch` channel is implicit. Registering a Service Worker and scope create
 
 The `postMessage` channel is made available through Service Worker Registration Objects and through the `clients` collection (inside the SW execution context).
 
-Until `navigator.connect()`, applications which wished to communicate to cross-origin Service Workers needed to create `<iframe>`s to create a cross-origin `postMessage` channel -- meaning that Service Workers were unable to talk to other Service Workers as `<iframe>`s are not available inside Service Workers contexts. 
+Until `navigator.connect()`, applications which wished to communicate to cross-origin Service Workers needed to create `<iframe>`s to create a cross-origin `postMessage` channel -- meaning that Service Workers were unable to talk to other Service Workers as `<iframe>`s are not available inside Service Workers contexts.
 
 There has been no ability to date to allow a cross-origin Service Workers to handle `onfetch` events for resource requests (not navigations).
 
@@ -98,7 +98,18 @@ An interesting wrinkle is how such a SW would get bootstrapped. We discuss one o
 
 ## Mommy, Where Do Service Workers Come From?
 
-Since both connection types require the target service worker to actually be installed before communication is possible, a new way of installing a service worker is needed. To enable this we introduce two new headers as part of the http response for any resource. Whenever these headers are present, the browser will install a service worker in the background (not blocking the original request), allowing future communication with the new service worker.
+Since both connection types require the target service worker to actually be installed before communication is possible, a new way of installing a service worker is needed. To enable this we introduce two new headers as part of the http response for any resource:
+
+```
+Service-Worker-Scope: scopeURL
+Service-Worker-Script: scriptURL
+```
+
+Note that in conjuction with these headers, the `Service-Worker-Allowed` header in the response to the actual script fetch, if present, is used to set the maximum scope allowed.
+
+When the `Service-Worker-Scope` header is absent, the scope defaults to the script's location. The maximum scope allowed is the script's location by default, but if the `Service-Worker-Allowed` header is given, the maximum scope allowed is set to its value.
+
+Whenever these headers are present, the browser will install a service worker in the background (not blocking the original request), allowing future communication with the new service worker.
 
 Concretely, this http response:
 
@@ -108,13 +119,24 @@ status:200 OK
 content-length:3852
 content-type:image/png
 Service-Worker-Scope: /share/
-Service-Worker-Script: /common/share/v1/sw.js
+Service-Worker-Script: /common/share/sw.js
 [...]
 ```
 
-Will eventually behave as if some page on HTTPS://api.thirdparty.org executed the following javascript code in the background:
+will lead to fetching /common/share/sw.js for which we would expect the following response:
 
-```js
-navigator.serviceworker.register('/common/share/v1/sw.js', {scope: '/share/'});
+```
+GET HTTPS://api.thirdparty.org/common/share/sw.js
+status:200 OK
+Content-Encoding:gzip
+Content-Length:971
+Content-Type:text/javascript; charset=utf-8
+Service-Worker-Allowed: /share/
 ```
 
+as a result will eventually behave as if some page on HTTPS://api.thirdparty.org executed the following javascript code in the background:
+
+```js
+// Note: Without "Service-Worker-Allowed: /share/" header, the installation fails.
+navigator.serviceworker.register('/common/share/sw.js', {scope: '/share/'});
+```
