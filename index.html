@@ -20,6 +20,11 @@
               company: "Google",
               companyURL: "https://www.google.com/"
             },
+            {
+              name: "Jungkee Song",
+              company: "Samsung Electronics",
+              companyURL: "http://www.samsung.com/sec/"
+            },
           ],
           edDraftURI:   "https://mkruisselbrink.github.io/navigator-connect/",
           noLegacyStyle: true,
@@ -70,13 +75,13 @@ navigator.connect('https://example.com/services/echo').then(
 );
 
 // https://example.com/serviceworker.js
-this.addEventListener('crossoriginconnect', function(event) {
+this.addEventListener('connect', function(event) {
   // Optionally check event.client.origin to determine if that origin should be
   // allowed access to this service.
   event.acceptConnection(event.client.targetUrl === 'https://example.com/services/echo');
 });
 
-this.addEventListener('crossoriginmessage', function(event) {
+this.addEventListener('message', function(event) {
   event.source.postMessage(event.data, event.ports);
 });
 </pre>
@@ -156,8 +161,13 @@ this.addEventListener('crossoriginmessage', function(event) {
       <p>
         The <code><dfn id=
         "widl-NavigatorConnect-connect-Promise-MessagePort--USVString-url">connect</dfn></code>
-        method when invoked runs the "<a href="#connect">Connect</a>" algorithm.
+        method when invoked runs these steps:
       </p>
+      <ol>
+        <li>Let <var>url</var> be the result of parsing <var>url</var> with <a href="https://html.spec.whatwg.org/multipage/webappapis.html#entry-settings-object">entry settings object</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#api-base-url">API base URL</a>.</li>
+        <li>If <var>url</var> is failure, return a <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a> rejected with a <code>TypeError</code>.</li>
+        <li>Return the result of running <a href="#connect">Connect</a> algorithm with <var>url</var> as the argument.</li>
+      </ol>
       <p class="note">
         Maybe connect should have an additional parameter to connect to pass extra structured data
         to the connection event handler.
@@ -260,10 +270,10 @@ this.addEventListener('crossoriginmessage', function(event) {
             readonly attribute CrossOriginServiceWorkerClients crossOriginClients
           </dt>
           <dt>
-            attribute EventHandler oncrossoriginconnect
+            attribute EventHandler onconnect
           </dt>
           <dt>
-            attribute EventHandler oncrossoriginmessage
+            attribute EventHandler onmessage
           </dt>
         </dl>
       </section>
@@ -273,25 +283,25 @@ this.addEventListener('crossoriginmessage', function(event) {
         </h2>
         <p>
           The <code><dfn id=
-          "widl-ServiceWorkerGlobalScope-oncrossoriginconnect">oncrossoriginconnect</dfn></code>
+          "widl-ServiceWorkerGlobalScope-onconnect">onconnect</dfn></code>
           attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a>
-          is <code><a>crossoriginconnect</a></code>.
+          is <code><a>connect</a></code>.
         </p>
         <p>
           The <code><dfn id=
-          "widl-ServiceWorkerGlobalScope-oncrossoriginmessage">oncrossoriginmessage</dfn></code>
+          "widl-ServiceWorkerGlobalScope-onmessage">onmessage</dfn></code>
           attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a>
-          is <code><a>crossoriginmessage</a></code>.
+          is <code><a>message</a></code>.
         </p>
         <section>
           <h2>
-            The <code><dfn>crossoriginconnect</dfn></code> event
+            The <code><dfn>connect</dfn></code> event
           </h2>
           <p>
-            The <a>CrossOriginConnectEvent</a> interface represents a received cross origin
+            The <a>ConnectEvent</a> interface represents a received cross origin
             connection attempts.
           </p>
-          <dl title="[Exposed=ServiceWorker] interface CrossOriginConnectEvent : Event" class=
+          <dl title="[Exposed=ServiceWorker] interface ConnectEvent : Event" class=
           "idl">
             <dt>
               readonly attribute CrossOriginServiceWorkerClient client
@@ -302,13 +312,13 @@ this.addEventListener('crossoriginmessage', function(event) {
           </dl>
           <p>
             The <code><dfn id=
-            "widl-CrossOriginConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection</dfn></code>
+            "widl-ConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection</dfn></code>
             method must be called with a promise that resolves to true or false.
           </p>
         </section>
         <section>
           <h2>
-            The <code><dfn>crossoriginmessage</dfn></code> event
+            The <code><dfn>message</dfn></code> event
           </h2>
           <p>
             This is a <code><a>MessageEvent</a></code> whose <code>event.source</code> is an
@@ -329,65 +339,76 @@ this.addEventListener('crossoriginmessage', function(event) {
         <h2>
           Connect
         </h2>
+        <dl>
+          <dt>Input</dt>
+            <dd><var>url</var>, an <a href="https://url.spec.whatwg.org/#concept-absolute-url">an absolute URL</a></dd>
+          <dt>Output</dt>
+            <dd><var>promise</var>, a <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a></dd>
+        </dl>
         <ol>
           <li>Let <var>promise</var> be a new <a><code>Promise</code></a>.
           </li>
-          <li>Return <var>promise</var> and continue the following steps asynchronously.
-          </li>
-          <li>Let <var>registration</var> be the result of running the "Match Scope" algorithm on
-          <var>url</var>
-          </li>
-          <li>If <var>registration</var> is null, reject <var>promise</var> with a
-          <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
-          terminate these steps.
-            <p class="issue">
-              It might be nice to be able to connect to a service without that service having to
-              have been installed first. Maybe web manifests can help here to provide a way to
-              determine what service worker to install for a specific service URL?
-            </p>
-          </li>
-          <li>If <var>registration</var>'s active worker is not null, then:
+          <li>Run the following substeps in parallel:
             <ol>
-              <li>Run the "Handle Functional Event" algorithm with <var>registration</var> and the
-              following steps as <var>callbackSteps</var>.
+              <li>Let <var>registration</var> be the result of running the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#scope-match-algorithm">Match Service Worker Registration</a> algorithm on
+              <var>url</var>
               </li>
-              <li>Fire an event named <code><a>crossoriginconnect</a></code> using
-              <code><a>CrossOriginConnectEvent</a></code> interface at the returned global object.
+              <li>If <var>registration</var> is null, reject <var>promise</var> with a
+              <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
+              terminate these steps.
                 <p class="issue">
-                  Better define these next steps.
+                  It might be nice to be able to connect to a service without that service having to
+                  have been installed first. Maybe web manifests can help here to provide a way to
+                  determine what service worker to install for a specific service URL?
                 </p>
               </li>
-              <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
-              <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners
-              called <code><a>acceptConnection</a></code>.
-              </li>
-              <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to <code>
-                true</code>, do the following:
+              <li>If <var>registration</var>'s <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">active worker</a> is not null, then:
                 <ol>
-                  <li>Let <var>messageChannel</var> be a new <a><code>MessageChannel</code></a>.
-                  </li>
-                  <li>Resolve <var>promise</var> with the first port of <var>messageChannel</var>.
-                  </li>
-                  <li>Let <var>crossOriginClient</var> be a new
-                  <a><code>CrossOriginServiceWorkerClient</code></a> associated with the second
-                  port of <var>messageChannel</var>.
-                  </li>
-                  <li>Add <var>crossOriginClient</var> to the list of cross origin clients
-                  associated with <var>registration</var>.
+                  <li>Run the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#handle-functional-event-algorithm">Handle Functional Event</a> algorithm with <var>registration</var> and <var>callbackSteps</var> that when invoked with <var>global</var> run the
+                  following substeps:
+                    <ol>
+                      <li>Fire an event named <code><a>connect</a></code> using
+                      <code><a>ConnectEvent</a></code> interface at <var>global</var>.
+                        <p class="issue">
+                          Better define these next steps.
+                        </p>
+                      </li>
+                      <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
+                      <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners
+                      called <code><a>acceptConnection</a></code>.
+                      </li>
+                      <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to <code>
+                        true</code>, do the following:
+                        <ol>
+                          <li>Let <var>messageChannel</var> be a new <a><code>MessageChannel</code></a>.
+                          </li>
+                          <li>Resolve <var>promise</var> with the first port of <var>messageChannel</var>.
+                          </li>
+                          <li>Let <var>crossOriginClient</var> be a new
+                          <a><code>CrossOriginServiceWorkerClient</code></a> associated with the second
+                          port of <var>messageChannel</var>.
+                          </li>
+                          <li>Add <var>crossOriginClient</var> to the list of cross origin clients
+                          associated with <var>registration</var>.
+                          </li>
+                        </ol>
+                      </li>
+                      <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose
+                      name is "<code><a>AbortError</a></code>".
+                      </li>
+                    </ol>
                   </li>
                 </ol>
               </li>
-              <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose
-              name is "<code><a>AbortError</a></code>".
+              <li>Else:
+                <p class="issue">
+                  Figure out sensible behavior when there is no active worker. Probably wait for some
+                  worker to become the active worker?
+                </p>
               </li>
             </ol>
           </li>
-          <li>Else:
-            <p class="issue">
-              Figure out sensible behavior when there is no active worker. Probably wait for some
-              worker to become the active worker?
-            </p>
-          </li>
+          <li>Return <var>promise</var>.</li>
         </ol>
         <p class="issue">
           Somehow phrase this to allow other ways for a user agent to connect to services, in
@@ -411,13 +432,13 @@ this.addEventListener('crossoriginmessage', function(event) {
           <li>Retarget <var>messageEvent</var> at the returned global object, setting its source to
           the <code><a>CrossOriginServiceWorkerClient</a></code>.
           </li>
-          <li>Fire <var>messageEvent</var> as an event named <code><a>crossoriginmessage</a></code>
+          <li>Fire <var>messageEvent</var> as an event named <code><a>message</a></code>
           at the returned global object.
           </li>
         </ol>
         <p class="note">
           Note that this means that a message is always delivered to the currently active service
-          worker for a given registration, even if the crossoriginconnect event was delivered to a
+          worker for a given registration, even if the connect event was delivered to a
           different version.
         </p>
         <p class="note">
