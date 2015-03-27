@@ -19,7 +19,7 @@ Service Workers offer two types of communication channel with documents:
 
 The `onfetch` channel is implicit. Registering a Service Worker and scope creates the necessary mapping for browsers to decide that a SW is competent to handle top-level fetches for documents which match the scope and registration. Subsequent sub-resource requests are routed to the originating SW (creating more `onfetch` events).
 
-The `postMessage` channel is made available through Service Worker Registration Objects and through the `clients` collection (inside the SW execution context).
+The `postMessage` channel is made available through the `ServiceWorker` objects (gotten from inside Windows or other Worker clients) and the `Client` objects (gotten from inside the SW execution context).
 
 Until `navigator.connect()`, applications which wished to communicate to cross-origin Service Workers needed to create `<iframe>`s to create a cross-origin `postMessage` channel -- meaning that Service Workers were unable to talk to other Service Workers as `<iframe>`s are not available inside Service Workers contexts.
 
