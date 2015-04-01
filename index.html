@@ -63,7 +63,7 @@
         <h2>
           Example
         </h2>
-        <pre class="example highlight">
+        <pre class="example highlight" title="Connect to a service">
 // http://example.com/webapp.js
 navigator.connect('https://example.com/services/echo').then(
   function(port) {
@@ -73,7 +73,8 @@ navigator.connect('https://example.com/services/echo').then(
     };
   }
 );
-
+</pre>
+        <pre class="example highlight" title="Handle a connection request">
 // https://example.com/serviceworker.js
 this.addEventListener('connect', function(event) {
   // Optionally check event.client.origin to determine if that origin should be
@@ -83,6 +84,47 @@ this.addEventListener('connect', function(event) {
     // Set up a listener
   });
   event.source.postMessage('You are connected!');
+  // Port isn't stored, so when the service worker is killed the connection will be closed.
+});
+</pre>
+        <pre class="example highlight" title="Setup a potentially long lasting connection to a service">
+// https://acme.com/client-sw.js
+self.addEventListener('install', function(event) {
+  // Perform install steps
+  event.waitUntil(
+    navigator.connect('https://example.com/services/foobar')
+      .then(function(port) {
+        console.log('Connected to service');
+        // Store port to keep the connection alive after this service worker is killed.
+        self.ports.add('foobar', port);
+      })
+  );
+});
+</pre>
+        <pre class="example highlight" title="Handle a connection request for a long lasting connection">
+// https://example.com/serviceworker.js
+self.addEventListener('connect', function(event) {
+  // Somehow decide to accept or reject the connection.
+  event.acceptConnection(event.client.targetUrl === 'https://example.com/services/foobar');
+  // Store port to keep the connection alive after this service worker is killed.
+  self.ports.add('foobarClient', event.source);
+});
+
+self.ports.addEventListener('message', function(event) {
+  // Handle messages send to stored ports.
+  if (event.source.key === 'foobarClient') {
+    // ...
+  }
+});
+</pre>
+        <pre class="example highlight" title="Handle some event by sending a message to a stored port">
+// https://example.com/serviceworker.js
+
+self.addEventListener('someevent', function(event) {
+  event.waitUntil(
+    self.ports.match('foobarClient')
+      .then((ports) => ports.forEach((port) => port.postMessage('some event happened')))
+  );
 });
 </pre>
       </section>
