@@ -86,15 +86,17 @@ navigator.connect('https://example.com/services/echo').then(
 self.addEventListener('connect', function(event) {
   // Optionally check event.origin to determine if that origin should be
   // allowed access to this service.
-  event.acceptConnection(event.targetUrl === 'https://example.com/services/echo')
-    .then(function(port) {
-      port.addEventListener('message', function(event) {
-        // Set up a listener
-      });
-      port.postMessage('You are connected!');
-      // Port isn't persisted, so when the service worker is killed the
-      // connection will be closed.
+  if (event.targetUrl === 'https://example.com/services/echo') {
+    let channel = new MessageChannel;
+    event.acceptConnection(channel.port2);
+    let port = channel.port1;
+    port.addEventListener('message', function(event) {
+      // Set up a listener
     });
+    port.postMessage('You are connected!');
+    // Port isn't persisted, so when the service worker is killed the
+    // connection will be closed.
+  }
 });
 ```
 
@@ -103,11 +105,12 @@ self.addEventListener('connect', function(event) {
 self.addEventListener('connect', function(event) {
   // Optionally check event.origin to determine if that origin should be
   // allowed access to this service.
-  event.acceptConnection(event.targetUrl === 'https://example.com/services/echo',
-                         {persistAs: 'echoClient'})
-    .then(function(port) {
-      port.postMessage('You are connected!');
-    });
+  if (event.targetUrl === 'https://example.com/services/echo') {
+    let channel = new MessageChannel;
+    event.acceptConnection(channel.port2);
+    let port = self.ports.add('echoClient', channel.port1);
+    port.postMessage('You are connected!');
+  }
 });
 
 self.ports.addEventListener('message', function(event) {
