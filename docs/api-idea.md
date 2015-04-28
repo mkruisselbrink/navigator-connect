@@ -19,49 +19,44 @@ partial interface ServiceWorkerGlobalScope {
 interface ConnectEvent {
   readonly attribute USVString targetURL;
   readonly attribute USVString origin;
-  Promise<MessagePort> acceptConnection(Promise<boolean> shouldAccept, optional ConnectOptions options);
-};
-
-dictionary ConnectOptions {
-  DOMString? persistAs;
+  void acceptConnection(Promise<MessagePort> port);
 };
 ```
 
  * `ConnectEvent` is not a `MessageEvent`, since the event wouldn't have any data/message anyway, and additionally having a `.source` attribute as well as an `acceptConnection` method requires hard to understand/explain behavior.
  * `targetURL` is the url the connection was made to, always within the scope of the service worker.
  * `origin` is the origin of the client that setup the connection.
- * `acceptConnection` accepts or rejects the connection, if optional `options.persistAs` is passed the source `MessagePort` will be persisted with `name`=`options.persistAs`.
- * If `persistAs` is passed, the promise returned by `acceptConnection` will resolve to a `PersistentMessagePort` instance, otherwise a regular `MessagePort`.
+ * Connection is only accepted if `acceptConnection` is called, and the promise resolves to a valid `MessagePort`.
 
 ## Persisted MessagePorts
 
 ```webidl
 partial interface ServiceWorkerGlobalScope {
-  readonly attribute PersistedPortCollection ports;
+  readonly attribute StashedPortCollection ports;
 };
 
 [Exposed=ServiceWorker]
-interface PersistedPortCollection : EventTarget {
-  // Persists a port, returns the persistent port. The original |port|
+interface StashedPortCollection : EventTarget {
+  // Persists a port, returns the stashed port. The original |port|
   // will be neutered by this.
-  PersistentMessagePort add(DOMString name, MessagePort port);
+  StashedMessagePort add(DOMString name, MessagePort port);
 
-  // Returns all entangled persisted ports for this service worker
+  // Returns all entangled stashed ports for this service worker
   // registration matching the name.
   Promise<sequence<PersistentMessagePort>> match(DOMString name);
 
-  // Event that is triggered whenever a persisted port receives a message.
+  // Event that is triggered whenever a stashed port receives a message.
   // Could just as well be the global onmessage event instead.
-  // The .source of the MessageEvent is the PersistentMessagePort instance.
+  // The .source of the MessageEvent is the StashedMessagePort instance.
   attribute EventHandler onmessage;
 };
 
 // Extends MessagePort with a |name| attribute. Besides that ports that are
-// an instance of PersistentMessagePort won't fire their own omessage event.
-// Neutering a PersistentMessagePort (for example when transferred) will also
-// remove it from PersistedPortCollection.
+// an instance of StashedMessagePort won't fire their own omessage event.
+// Neutering a StashedMessagePort (for example when transferred) will also
+// remove it from StashedPortCollection.
 [Exposed=ServiceWorker]
-interface PersistentMessagePort : MessagePort {
+interface StashedMessagePort : MessagePort {
   readonly attribute DOMString name;
 };
 ```
