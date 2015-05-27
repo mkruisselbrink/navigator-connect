@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h1>client</h1>
+    <script type="text/javascript" style="display: block; visibility: visible">
+      function getFolder (target, deltaUp) {
+        return target.pathname.replace(new RegExp("(?:\\\/+[^\\\/]*){0," + (deltaUp ? deltaUp + 1 : 1) + "}$"), "/");
+      }
+      var clientScriptURL = location.origin + getFolder(location) + 'client.js';
+      console.log('clientScriptURL: ', clientScriptURL);
+      (
+        function(d,u,s) {
+          s=d.createElement('script');
+          s.src=u;
+          d.head.appendChild(s);
+        }
+      )(document,
+        clientScriptURL + '?$unique=' + (crypto.getRandomValues(new Uint32Array(1))[0]&0x7fffffff));
+
+    </script>
+  </body>
+</html>
