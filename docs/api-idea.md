@@ -19,14 +19,14 @@ partial interface ServiceWorkerGlobalScope {
 interface ConnectEvent {
   readonly attribute USVString targetURL;
   readonly attribute USVString origin;
-  void acceptConnection(Promise<MessagePort> port);
+  void acceptConnection(MessagePort port);
 };
 ```
 
  * `ConnectEvent` is not a `MessageEvent`, since the event wouldn't have any data/message anyway, and additionally having a `.source` attribute as well as an `acceptConnection` method requires hard to understand/explain behavior.
  * `targetURL` is the url the connection was made to, always within the scope of the service worker.
  * `origin` is the origin of the client that setup the connection.
- * Connection is only accepted if `acceptConnection` is called, and the promise resolves to a valid `MessagePort`.
+ * Connection is only accepted if `acceptConnection` is called with a valid `MessagePort`.
 
 ## Persisted MessagePorts
 
@@ -43,7 +43,7 @@ interface StashedPortCollection : EventTarget {
 
   // Returns all entangled stashed ports for this service worker
   // registration matching the name.
-  Promise<sequence<PersistentMessagePort>> match(DOMString name);
+  Promise<sequence<StashedMessagePort>> match(DOMString name);
 
   // Event that is triggered whenever a stashed port receives a message.
   // Could just as well be the global onmessage event instead.
