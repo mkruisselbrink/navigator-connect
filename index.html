@@ -193,11 +193,17 @@ self.addEventListener('push', function(event) {
         service worker registration</a> has an associated <a>name to service port map</a>.
       </p>
       <p>
-        A <a href=
+        An <a href=
         "https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment
         settings object</a> whose <a>global object</a> is not a
         <code><a>ServiceWorkerGlobalScope</a></code> also has an associated <a>name to service port
         map</a>.
+      </p>
+      <p>
+        The <a>name to service port map</a> associated with an <a>environment settings object</a>
+        whose <a>global object</a> is a <code><a>ServiceWorkerGlobalScope</a></code> is equal to
+        the <a>name to service port map</a> associated with the <a>service worker registration</a>
+        associated with the <a>service worker</a>.
       </p>
       <p>
         A <dfn>name to service port map</dfn> is a <a href=
@@ -366,6 +372,62 @@ self.addEventListener('push', function(event) {
             </li>
           </ol>
         </section>
+      </section>
+      <section>
+        <h2>
+          <a>ServicePort</a> interface
+        </h2>
+        <p>
+          An instance of the <a><code>ServicePort</code></a> interface represents a <a>service
+          port</a>.
+        </p>
+        <dl title="[Exposed=(Window,Worker)] interface ServicePort" class="idl">
+          <dt>
+            readonly attribute DOMString targetURL
+          </dt>
+          <dt>
+            readonly attribute DOMString name
+          </dt>
+          <dt>
+            readonly attribute any data
+          </dt>
+          <dt>
+            void postMessage(any message, optional sequence&lt;Transferable&gt; transfer)
+          </dt>
+          <dt>
+            void close()
+          </dt>
+        </dl>
+        <p>
+          The <code><dfn id="widl-ServicePort-targetURL">targetURL</dfn></code> attribute MUST
+          return the <a>target url</a> of the <a>connection</a> associated with the <a>service
+          port</a>.
+        </p>
+        <p>
+          The <code><dfn id="widl-ServicePort-name">name</dfn></code> attribute MUST return the
+          <a>name</a> of the <a>service port</a>.
+        </p>
+        <p>
+          The <code><dfn id="widl-ServicePort-data">data</dfn></code> attribute MUST return the
+          <a>data</a> of the <a>service port</a>.
+        </p>
+        <p>
+          The <code><dfn id=
+          "widl-ServicePort-postMessage-void-any-message-sequence-Transferable--transfer">postMessage(<var>message</var>,
+          <var>transfer</var>)</dfn></code> method MUST run these steps:
+        </p>
+        <ol>
+          <li>To be defined.
+          </li>
+        </ol>
+        <p>
+          The <code><dfn id="widl-ServicePort-close-void">close()</dfn></code> method MUST run
+          these steps:
+        </p>
+        <ol>
+          <li>To be defined.
+          </li>
+        </ol>
       </section>
       <section>
         <h2>
