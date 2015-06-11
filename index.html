@@ -65,31 +65,61 @@
         </h2>
         <pre class="example highlight" title="Connect to a service">
 // http://example.com/webapp.js
-navigator.connect('https://example.com/services/echo').then(
+navigator.services.connect('https://example.com/services/echo').then(
   function(port) {
     port.postMessage('hello');
-    port.onmessage = function(event) {
+
+    navigator.services.addEventListener('message', function(event) {
+      if (event.source != port) return;
       // Handle reply from the service.
-    };
+    });
+
+    navigator.services.addEventListener('close', function(event) {
+      if (event.source != port) return;
+      // The connection to the service was clsoed.
+    });
   }
 );
 </pre>
         <pre class="example highlight" title="Handle a connection request">
 // https://example.com/serviceworker.js
-self.addEventListener('connect', function(event) {
+navigator.services.addEventListener('connect', function(event) {
   // Optionally check event.origin to determine if that origin should be
   // allowed access to this service.
-  if (event.targetUrl === 'https://example.com/services/echo') {
-    let channel = new MessageChannel;
-    event.acceptConnection(channel.port2);
-    let port = channel.port1;
-    port.addEventListener('message', function(event) {
-      // Set up a listener
-    });
+  if (event.targetURL === 'https://example.com/services/echo') {
+    let port = event.accept({name: 'echo_client'});
     port.postMessage('You are connected!');
-    // Port isn't persisted, so when the service worker is killed the
-    // connection will be closed.
   }
+});
+
+navigator.services.addEventListener('message', function(event) {
+  if (event.source.name === 'echo_client') {
+    // Handle messages from the client.
+    event.source.postMessage(event.data, event.ports);
+  } else {
+    // Connections no longer of interest.
+    event.source.close();
+  }
+});
+</pre>
+        <pre class="example highlight" title="Connect to a service from a service worker">
+// https://acme.com/client-sw.js
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    navigator.services.connect('https://example.com/services/analytics', {name: 'analytics'}));
+});
+
+self.addEventListener('fetch', function(event) {
+  navigator.services.match({name: 'analytics'}).then(
+    (port) =&gt; port.postMessage('log fetch'));
+});
+</pre>
+        <pre class="example highlight" title=
+        "Handle push event by sending a message to a stored port">
+// https://example.com/serviceworker.js
+self.addEventListener('push', function(event) {
+  event.waitUntil(navigator.services.matchAll({targetURL: 'https://example.com/services/push').then(
+    (ports) =&gt; ports.forEach((port) =&gt; port.postMessage('received push'))));
 });
 </pre>
       </section>
@@ -153,230 +183,331 @@ self.addEventListener('connect', function(event) {
         implications.
       </p>
     </section>
-
-    <section>
-      <h2>Model</h2>
-      <p>A <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker-registration">service worker registration</a> has an associated <a>name to stashed port map</a>.</p>
-
-      <p class="issue">Do we want to allow connecting to installing / waiting workers and stashing ports in that state when the registrations does not have an active worker?</p>
-
-      <p class="issue">The MessagePort's <a href="https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a> should be able to be a service worker registration instead of the <a href="https://html.spec.whatwg.org/multipage/webappapis.html#settings-object">settings object</a> when it's created.</p>
-
-      <p>A <dfn>name to stashed port map</dfn> is a <a href="http://en.wikipedia.org/wiki/Multimap">Multimap</a> of the Record {[key], [value]} where [key] is a <a>name</a> and [value] is a <a>stashed port</a>.</p>
-
-      <p>A <dfn>stashed port</dfn> is a <a href="https://html.spec.whatwg.org/multipage/comms.html#message-ports">message port</a> that can be persisted in a <a>name to stashed port map</a>.</p>
-
-      <p>A <a>stashed port</a> has its <dfn>name</dfn> (a string).</p>
-
-      <p>A <dfn>connection</dfn> is an <a href="https://html.spec.whatwg.org/multipage/comms.html#entangle">entangled</a> <a href="https://html.spec.whatwg.org/multipage/comms.html#message-channels">message channel</a>.</p>
-
-      <p>A <a>connection</a> has an associated <dfn>client</dfn> (one of a <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">service worker</a>, a window, a worker, and a shared worker) and an associated <dfn>service</dfn> (a <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">service worker</a>).</p>
-
-      <p>A <a>connection</a> has an associated <dfn>client port</dfn> (a <a href="https://html.spec.whatwg.org/multipage/comms.html#message-ports">message port</a>) and an associated <dfn>service port</dfn> (a <a href="https://html.spec.whatwg.org/multipage/comms.html#message-ports">message port</a>).</p>
-
-      <p>A <a href="https://html.spec.whatwg.org/multipage/comms.html#message-ports">message port</a> has an associated <dfn>connection</dfn>.</p>
-
-      <p>A <dfn>persistent connection</dfn> is a <a>connection</a> whose <a>client port</a> and <a>service port</a> are both <a>stashed</a>.</p>
-    </section>
     <section>
       <h2>
-        Client Context
+        Model
       </h2>
-      <dl title="[NoInterfaceObject, Exposed=(Window,Worker)] interface NavigatorConnect" class="idl">
-        <dt>
-          Promise&lt;MessagePort&gt; connect(USVString url)
-        </dt>
-      </dl>
-      <dl title="Navigator implements NavigatorConnect" class="idl"></dl>
-      <dl title="WorkerNavigator implements NavigatorConnect" class="idl"></dl>
-      <section>
-        <h2><code>connect(<var>url</var>)</code></h2>
-        <p>
-          The <code><dfn id=
-          "widl-NavigatorConnect-connect-Promise-MessagePort--USVString-url">connect(<var>url</var>)</dfn></code>
-          method MUST run these steps:
-        </p>
-        <ol>
-          <li>Let <var>url</var> be the result of parsing <var>url</var> with <a href="https://html.spec.whatwg.org/multipage/webappapis.html#entry-settings-object">entry settings object</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#api-base-url">API base URL</a>.</li>
-          <li>If <var>url</var> is failure, return a <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a> rejected with a <code>TypeError</code>.</li>
-          <li>Return the result of running <a href="#connect">Connect</a> algorithm with <var>url</var> as the argument.</li>
-        </ol>
-      </section>
-      <p class="issue">
-        Currently MessagePort does not provide an event handler that is called when the message channel is closed. This can be problematic especially when a service port is gone. There need to be an event (e.g. <code>closed</code>) and its corresponding event handler (e.g. <code>onclosed</code>) to notify this state.
+      <p>
+        A <a href=
+        "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker-registration">
+        service worker registration</a> has an associated <a>name to service port map</a>.
+      </p>
+      <p>
+        An <a href=
+        "https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment
+        settings object</a> whose <a>global object</a> is not a
+        <code><a>ServiceWorkerGlobalScope</a></code> also has an associated <a>name to service port
+        map</a>.
+      </p>
+      <p>
+        The <a>name to service port map</a> associated with an <a>environment settings object</a>
+        whose <a>global object</a> is a <code><a>ServiceWorkerGlobalScope</a></code> is equal to
+        the <a>name to service port map</a> associated with the <a>service worker registration</a>
+        associated with the <a>service worker</a>.
+      </p>
+      <p>
+        A <dfn>name to service port map</dfn> is a <a href=
+        "http://en.wikipedia.org/wiki/Multimap">Multimap</a> of the Record {[key], [value]} where
+        [key] is a <a>name</a> and [value] is a <a>service port</a>.
+      </p>
+      <p>
+        A <dfn>service port</dfn> represents a connection made using this API.
+      </p>
+      <p>
+        A <a>service port</a> has an implicit <dfn>message port</dfn> associated with it.
+      </p>
+      <p>
+        A <a>service port</a> has its <dfn>name</dfn> (a string).
+      </p>
+      <p>
+        A <a>service port</a> has its <dfn>data</dfn> (anything).
+      </p>
+      <p>
+        A <dfn>connection</dfn> is an <a href=
+        "https://html.spec.whatwg.org/multipage/comms.html#entangle">entangled</a> <a href=
+        "https://html.spec.whatwg.org/multipage/comms.html#message-channels">message channel</a>.
+      </p>
+      <p>
+        A <a>connection</a> has an associated <dfn>client</dfn> (one of a <a href=
+        "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
+        service worker</a>, a window, a worker, and a shared worker) and an associated
+        <dfn>service</dfn> (a <a href=
+        "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
+        service worker</a>).
+      </p>
+      <p>
+        A <a>connection</a> has an associated <dfn>client side port</dfn> (a <a>service port</a>)
+        and an associated <dfn>service side port</dfn> (a <a>service port</a>).
+      </p>
+      <p>
+        A <a>service port</a> has an associated <a>connection</a>.
+      </p>
+      <p>
+        A <a>connection</a> has its <dfn>target url</dfn> (a string).
       </p>
     </section>
     <section>
       <h2>
-        Service Context
+        API Description
       </h2>
       <section>
         <h2>
-          Extensions to <code>ServiceWorkerGlobalScope</code>
+          <code>navigator.services</code>
         </h2>
-        <p>
-          The service worker specification defines the <code><a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#service-worker-global-scope-interface">ServiceWorkerGlobalScope</a></code>
-          interface [[!SERVICE-WORKERS]], which this specification extends.
-        </p>
-        <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
+        <dl title="[NoInterfaceObject] interface NavigatorServices" class="idl">
           <dt>
-            attribute EventHandler onconnect
+            readonly attribute ServicePortCollection services
+          </dt>
+        </dl>
+        <dl title="Navigator implements NavigatorServices" class="idl"></dl>
+        <dl title="WorkerNavigator implements NavigatorServices" class="idl"></dl>
+      </section>
+      <section>
+        <h2>
+          <a>ServicePortCollection</a> interface
+        </h2>
+        <dl title="[Exposed=(Window,Worker)] interface ServicePortCollection : EventTarget" class=
+        "idl" data-merge="ServicePortConnectOptions ServicePortMatchOptions">
+          <dt>
+            Promise&lt;ServicePort&gt; connect(DOMString url, optional ServicePortConnectOptions
+            options)
+          </dt>
+          <dt>
+            Promise&lt;ServicePort&gt; match(ServicePortMatchOptions options)
+          </dt>
+          <dt>
+            Promise&lt;sequence&lt;ServicePort&gt;&gt; matchAll(optional ServicePortMatchOptions
+            options)
+          </dt>
+          <dt>
+            [Exposed=ServiceWorker] attribute EventHandler onconnect
+          </dt>
+          <dt>
+            attribute EventHandler onmessage
+          </dt>
+          <dt>
+            attribute EventHandler onclose
+          </dt>
+        </dl>
+        <dl title="dictionary ServicePortConnectOptions" class="idl">
+          <dt>
+            DOMString name
+          </dt>
+          <dt>
+            any data
+          </dt>
+        </dl>
+        <dl title="dictionary ServicePortMatchOptions" class="idl">
+          <dt>
+            DOMString name
+          </dt>
+          <dt>
+            DOMString targetURL
           </dt>
         </dl>
         <p>
-          The <code><dfn id=
-          "widl-ServiceWorkerGlobalScope-onconnect">onconnect</dfn></code>
-          attribute is an <a>event handler</a> whose corresponding <a>event handler event type</a>
-          is <code><a>connect</a></code>.
+          The <code><dfn id="widl-ServicePortCollection-onconnect">onconnect</dfn></code> attribute
+          is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
+          <code><a>connect</a></code>.
         </p>
+        <p>
+          The <code><dfn id="widl-ServicePortCollection-onmessage">onmessage</dfn></code> attribute
+          is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
+          <code>message</code>.
+        </p>
+        <p>
+          The <code><dfn id="widl-ServicePortCollection-onclose">onclose</dfn></code> attribute is
+          an <a>event handler</a> whose corresponding <a>event handler event type</a> is
+          <code><a>close</a></code>.
+        </p>
+        <section>
+          <h2>
+            <code>connect(<var>url</var>, <var>options</var>)</code>
+          </h2>
+          <p>
+            The <code><dfn id=
+            "widl-ServicePortCollection-connect-Promise-ServicePort--DOMString-url-ServicePortConnectOptions-options">
+            connect(<var>url</var>, <var>options</var>)</dfn></code> method MUST run these steps:
+          </p>
+          <ol>
+            <li>Let <var>url</var> be the result of parsing <var>url</var> with <a href=
+            "https://html.spec.whatwg.org/multipage/webappapis.html#entry-settings-object">entry
+            settings object</a>'s <a href=
+            "https://html.spec.whatwg.org/multipage/webappapis.html#api-base-url">API base URL</a>.
+            </li>
+            <li>If <var>url</var> is failure, return a <a href=
+            "https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a>
+            rejected with a <code>TypeError</code>.
+            </li>
+            <li>Return the result of running <a href="#connect">Connect</a> algorithm with
+            <var>url</var> and <var>options</var> as arguments.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <code>match(<var>options</var>)</code>
+          </h2>
+          <p>
+            The <code><dfn id=
+            "widl-ServicePortCollection-match-Promise-ServicePort--ServicePortMatchOptions-options">
+            match(<var>options</var>)</dfn></code> method MUST run these steps:
+          </p>
+          <ol>
+            <li>To be defined.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <code>matchAll(<var>options</var>)</code>
+          </h2>
+          <p>
+            The <code><dfn id=
+            "widl-ServicePortCollection-matchAll-Promise-sequence-ServicePort---ServicePortMatchOptions-options">
+            matchAll(<var>options</var>)</dfn></code> method MUST run these steps:
+          </p>
+          <ol>
+            <li>To be defined.
+            </li>
+          </ol>
+        </section>
+      </section>
+      <section>
+        <h2>
+          <a>ServicePort</a> interface
+        </h2>
+        <p>
+          An instance of the <a><code>ServicePort</code></a> interface represents a <a>service
+          port</a>.
+        </p>
+        <dl title="[Exposed=(Window,Worker)] interface ServicePort" class="idl">
+          <dt>
+            readonly attribute DOMString targetURL
+          </dt>
+          <dt>
+            readonly attribute DOMString name
+          </dt>
+          <dt>
+            readonly attribute any data
+          </dt>
+          <dt>
+            void postMessage(any message, optional sequence&lt;Transferable&gt; transfer)
+          </dt>
+          <dt>
+            void close()
+          </dt>
+        </dl>
+        <p>
+          The <code><dfn id="widl-ServicePort-targetURL">targetURL</dfn></code> attribute MUST
+          return the <a>target url</a> of the <a>connection</a> associated with the <a>service
+          port</a>.
+        </p>
+        <p>
+          The <code><dfn id="widl-ServicePort-name">name</dfn></code> attribute MUST return the
+          <a>name</a> of the <a>service port</a>.
+        </p>
+        <p>
+          The <code><dfn id="widl-ServicePort-data">data</dfn></code> attribute MUST return the
+          <a>data</a> of the <a>service port</a>.
+        </p>
+        <p>
+          The <code><dfn id=
+          "widl-ServicePort-postMessage-void-any-message-sequence-Transferable--transfer">postMessage(<var>message</var>,
+          <var>transfer</var>)</dfn></code> method MUST run these steps:
+        </p>
+        <ol>
+          <li>To be defined.
+          </li>
+        </ol>
+        <p>
+          The <code><dfn id="widl-ServicePort-close-void">close()</dfn></code> method MUST run
+          these steps:
+        </p>
+        <ol>
+          <li>To be defined.
+          </li>
+        </ol>
       </section>
       <section>
         <h2>
           The <code><dfn>connect</dfn></code> event
         </h2>
         <p>
-          The <a>ConnectEvent</a> interface represents a received cross origin
-          connection attempt.
+          The <a>ServicePortConnectEvent</a> interface represents a received connection attempt.
         </p>
         <dl title=
-        "[Constructor(DOMString type, optional ConnectEventInit eventInitDict), Exposed=ServiceWorker] interface ConnectEvent : ExtendableEvent" class=
-        "idl" data-merge="ConnectEventInit">
+        "[Constructor(DOMString type, optional ServicePortConnectEventInit eventInitDict), Exposed=ServiceWorker] interface ServicePortConnectEvent : ExtendableEvent"
+        class="idl" data-merge="ServicePortConnectEventInit">
           <dt>
-            readonly attribute USVString targetURL
+            readonly attribute DOMString targetURL
           </dt>
           <dt>
-            readonly attribute USVString origin
+            readonly attribute DOMString origin
           </dt>
           <dt>
-            void acceptConnection(MessagePort port)
+            ServicePort accept(optional ServicePortConnectOptions options)
           </dt>
         </dl>
-        <dl title="dictionary ConnectEventInit : ExtendableEventInit" class="idl">
+        <dl title="dictionary ServicePortConnectEventInit : EventInit" class="idl">
           <dt>
-            USVString targetURL
+            DOMString targetURL
           </dt>
           <dt>
-            USVString origin
+            DOMString origin
           </dt>
         </dl>
         <p>
-          The <code><dfn id=
-          "widl-ConnectEvent-targetURL">targetURL</dfn></code>
+          The <code><dfn id="widl-ServicePortConnectEvent-targetURL">targetURL</dfn></code>
           attribute must return the value it was initialized to.
         </p>
         <p>
-          The <code><dfn id=
-          "widl-ConnectEvent-origin">origin</dfn></code>
-          attribute must return the value it was initialized to.
+          The <code><dfn id="widl-ServicePortConnectEvent-origin">origin</dfn></code> attribute
+          must return the value it was initialized to.
         </p>
         <p>
           The <code><dfn id=
-          "widl-ConnectEvent-acceptConnection-void-Promise-boolean--shouldAccept">acceptConnection(<var>port</var>)</dfn></code>
+          "widl-ServicePortConnectEvent-accept-ServicePort-ServicePortConnectOptions-options">accept(<var>options</var>)</dfn></code>
           method MUST run these steps:
         </p>
         <ol>
-          To be defined.
+          <li>To be defined.
+          </li>
         </ol>
-        <p class="issue">Under discussion how the <a>service</a> accepts or rejects the connection request.</p>
-        <p class="issue">Either a service worker registration or a service worker needs to have a list of connecting clients (and their unique ids) to serve multiple clients' requests at the same time.</p>
+        <p class="issue">
+          Under discussion how the <a>service</a> accepts or rejects the connection request.
+        </p>
       </section>
-    </section>
-    <section>
-      <h2>Stashing Ports and Messaging</h2>
-      <pre class="example highlight" title="Setup a potentially long lasting connection to a service">
-// https://acme.com/client-sw.js
-self.addEventListener('install', function(event) {
-  event.waitUntil(navigator.connect('https://example.com/services/analytics')
-    .then((port) => self.ports.add('analytics', port)));
-});
-
-self.addEventListener('fetch', function(event) {
-  self.ports.match('analytics').then((ports) => ports[0].postMessage('log fetch'));
-});
-</pre>
-        <pre class="example highlight" title="Handle a connection request for a long lasting connection">
-// https://example.com/serviceworker.js
-self.addEventListener('connect', function(event) {
-  // Optionally check event.origin to determine if that origin should be
-  // allowed access to this service.
-  if (event.targetUrl === 'https://example.com/services/echo') {
-    let channel = new MessageChannel;
-    event.acceptConnection(channel.port2);
-    let port = self.ports.add('echoClient', channel.port1);
-    port.postMessage('You are connected!');
-  }
-});
-
-self.ports.addEventListener('message', function(event) {
-  if (event.source.name === 'echoClient') {
-    event.source.postMessage(event.data);
-  }
-});
-</pre>
-        <pre class="example highlight" title="Handle push event by sending a message to a stored port">
-// https://example.com/serviceworker.js
-self.addEventListener('push', function(event) {
-  event.waitUntil(self.ports.match('pushClient').then(
-    (ports) => ports.forEach((port) => port.postMessage('received push'))));
-});
-</pre>
       <section>
-        <h2><code>self.ports</code></h2>
-        <dl title="partial interface ServiceWorkerGlobalScope" class="idl">
+        <h2>
+          The <code><dfn>close</dfn></code> event
+        </h2>
+        <dl title=
+        "[Constructor(DOMString type, optional ServicePortCloseEventInit eventInitDict), Exposed=(Window, Worker)] interface ServicePortCloseEvent"
+        class="idl" data-merge="ServicePortCloseEventInit">
           <dt>
-            readonly attribute StashedPortCollection ports
+            readonly attribute ServicePort source
           </dt>
         </dl>
-        <p>The <code><dfn id="widl-ServiceWorkerGlobalScope-ports">ports</dfn></code> attribute must return a <code><a>StashedPortCollection</a></code> object.</p>
-      </section>
-      <section>
-        <h2>
-          <code>StashedPortCollection</code>
-        </h2>
-        <dl title="interface StatshedPortCollection : EventTarget" class="idl">
-          <dt>StashedMessagePort add(DOMString name, MessagePort port)</dt>
-          <dt>Promise&lt;sequence&lt;StashedMessagePort&gt;&gt; match(DOMString name)</dt>
-          <dt>attribute EventHandler onmessage</dt>
+        <dl title="dictionary ServicePortCloseEventInit : EventInit" class="idl">
+          <dt>
+            ServicePort source
+          </dt>
         </dl>
-        <p>
-          The <code><a>StashedPortCollection</a></code> object provides operations on the <a>name to stashed port map</a>.
-        </p>
-        <p>
-          The <code><dfn id=
-          "widl-StashedPortCollection-add">add(<var>name</var>, <var>port</var>)</dfn></code>
-          method MUST run these steps:
-        </p>
-        <ol>
-          To be defined.
-        </ol>
-        <p>
-          The <code><dfn id=
-          "widl-StashedPortCollection-match">match(<var>name</var>)</dfn></code>
-          method MUST run these steps:
-        </p>
-        <ol>
-          To be defined.
-        </ol>
-        <p>The <code><dfn id="widl-ServiceWorkerGlobalScope-onmessage">onmessage</dfn></code> attribute is an event handler whose corresponding event handler event type is <code>message</code>.</p>
-      </section>
-      <section>
-        <h2>
-          <code>StashedMessagePort</code>
-        </h2>
-        <dl title="interface StatshedMessagePort : MessagePort" class="idl">
-          <dt>readonly attribute DOMString name</dt>
+        <dl title=
+        "[Constructor(DOMString type, optional ServiceWorkerServicePortCloseEventInit eventInitDict), Exposed=ServiceWorker] interface ServiceWorkerServicePortCloseEvent : ExtendableEvent"
+        class="idl">
+          <dt>
+            readonly attribute ServicePort source
+          </dt>
         </dl>
-        <p>
-          The <code><a>StashedMessagePort</a></code> interface extends the MessagePort interface.
-        </p>
-        <p>A <code><a>StashedMessagePort</a></code> object has its associated <dfn id="stashed-message-port-stashed-port">stashed port</dfn> (a <a href="#dfn-stashed-port">stashed port</a>).</p>
-        <p>
-          The <code><dfn id=
-          "widl-StashedMessagePort-name">name</dfn></code> attribute MUST return the <a href="https://dom.spec.whatwg.org/#context-object">context object</a>'s <a href="#stashed-message-port-stashed-port">stashed port</a>'s <a href="#dfn-name">name</a>.
-        </p>
+        <dl title="dictionary ServiceWorkerServicePortCloseEventInit : ExtendableEventInit" class=
+        "idl">
+          <dt>
+            ServicePort source
+          </dt>
+        </dl>
       </section>
-      <p>The messaging between a <a>client port</a> and a <a>service port</a> is executed via the operations defined in the <code><a href="#service-worker-interface">MessagePort</a></code> interface in [[!WEBMESSAGING]].</p>
-      <p class="note">If <a>connect service</a> is not running when a <code>message</code> event is to be dispatched to the <a>service port</a> whose <a href="https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a> is the <a>connect service</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a>, the user agent must invoke <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#run-service-worker-algorithm">Run Service Worker</a> algorithm with <a>connect service</a> before dispatching the event.</p>
     </section>
     <section class="appendix">
       <h2>
@@ -386,32 +517,56 @@ self.addEventListener('push', function(event) {
         <h2>
           Connect
         </h2>
-        <p class="issue">The Connect algorithm will be re-defined.</p>
+        <p class="issue">
+          The Connect algorithm will be re-defined.
+        </p>
         <dl>
-          <dt>Input</dt>
-            <dd><var>url</var>, an <a href="https://url.spec.whatwg.org/#concept-absolute-url">an absolute URL</a></dd>
-          <dt>Output</dt>
-            <dd><var>promise</var>, a <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a></dd>
+          <dt>
+            Input
+          </dt>
+          <dd>
+            <var>url</var>, an <a href="https://url.spec.whatwg.org/#concept-absolute-url">an
+            absolute URL</a>
+          </dd>
+          <dt>
+            Output
+          </dt>
+          <dd>
+            <var>promise</var>, a <a href=
+            "https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a>
+          </dd>
         </dl>
         <ol>
           <li>Let <var>promise</var> be a new <a><code>Promise</code></a>.
           </li>
           <li>Run the following substeps in parallel:
             <ol>
-              <li>Let <var>registration</var> be the result of running the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#scope-match-algorithm">Match Service Worker Registration</a> algorithm on
-              <var>url</var>
+              <li>Let <var>registration</var> be the result of running the <a href=
+              "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#scope-match-algorithm">
+                Match Service Worker Registration</a> algorithm on <var>url</var>
               </li>
               <li>If <var>registration</var> is null, reject <var>promise</var> with a
               <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
               terminate these steps.
                 <p class="note">
-                  Since navigator.connect requires the target <a>service worker</a> to actually have been installed before <a>connect client</a> connects, a new way of installing a <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">service worker</a> is provided: <a href="https://github.com/mkruisselbrink/navigator-connect/blob/gh-pages/explainer.md#mommy-where-do-service-workers-come-from">The service worker installation via HTTP response headers</a>.
+                  Since navigator.connect requires the target <a>service worker</a> to actually
+                  have been installed before <a>connect client</a> connects, a new way of
+                  installing a <a href=
+                  "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
+                  service worker</a> is provided: <a href=
+                  "https://github.com/mkruisselbrink/navigator-connect/blob/gh-pages/explainer.md#mommy-where-do-service-workers-come-from">
+                  The service worker installation via HTTP response headers</a>.
                 </p>
               </li>
-              <li>If <var>registration</var>'s <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">active worker</a> is not null, then:
+              <li>If <var>registration</var>'s <a href=
+              "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">
+                active worker</a> is not null, then:
                 <ol>
-                  <li>Run the <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#handle-functional-event-algorithm">Handle Functional Event</a> algorithm with <var>registration</var> and <var>callbackSteps</var> that when invoked with <var>global</var> run the
-                  following substeps:
+                  <li>Run the <a href=
+                  "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#handle-functional-event-algorithm">
+                    Handle Functional Event</a> algorithm with <var>registration</var> and
+                    <var>callbackSteps</var> that when invoked with <var>global</var> run the
+                    following substeps:
                     <ol>
                       <li>Fire an event named <code><a>connect</a></code> using
                       <code><a>ConnectEvent</a></code> interface at <var>global</var>.
@@ -420,25 +575,61 @@ self.addEventListener('push', function(event) {
                         </p>
                       </li>
                       <li>Let <var>shouldAccept</var> be the parameter passed to the first call of
-                      <code><a>acceptConnection</a></code>, or <code>null</code> if no event listeners
-                      called <code><a>acceptConnection</a></code>.
+                      <code><a>acceptConnection</a></code>, or <code>null</code> if no event
+                      listeners called <code><a>acceptConnection</a></code>.
                       </li>
-                      <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to <code>
-                        true</code>, do the following:
+                      <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to
+                      <code>true</code>, do the following:
                         <ol>
-                          <li>Let <var>connection</var> be a new <a>connection</a>.</li>
-                          <li>Set <var>connection</var>'s <a>name</a> to <var>url</var>.</li>
-                          <li>Generate a new <a href="http://tools.ietf.org/html/rfc4122#section-3">UUID</a> and set <var>connection</var>'s <a>id</a> to the value.</li>
-                          <li>Set <var>connection</var>'s <a>client</a> to <a>connect client</a>.</li>
-                          <li>Set <var>connection</var>'s <a>service</a> to <var>registration</var>'s <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">active worker</a>.</li>
-                          <li><a href="https://html.spec.whatwg.org/multipage/comms.html#create-a-new-messageport-object">Create a new port</a> whose <a href="https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a> is the <a>connect client</a>, and set <var>connection</var>'s <a>client port</a> to the result value.</li>
-                          <li><a href="https://html.spec.whatwg.org/multipage/comms.html#create-a-new-messageport-object">Create a new port</a> whose <a href="https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a> is the <var>registration</var>'s <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">active worker</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a>, and set <var>connection</var>'s <a>service port</a> to the result value.</li>
-                          <li><a href="https://html.spec.whatwg.org/multipage/comms.html#entangle">Entangle</a> the <a>client port</a> and the <a>service port</a>.</li>
-                          <li>Set a newly-created <a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-list-and-record-specification-type">Record</a> {[key]: <var>connection</var>'s <a>name</a>, [value]: <var>connection</var>} to <a>name to connection map</a>.</li>
+                          <li>Let <var>connection</var> be a new <a>connection</a>.
+                          </li>
+                          <li>Set <var>connection</var>'s <a>name</a> to <var>url</var>.
+                          </li>
+                          <li>Generate a new <a href=
+                          "http://tools.ietf.org/html/rfc4122#section-3">UUID</a> and set
+                          <var>connection</var>'s <a>id</a> to the value.
+                          </li>
+                          <li>Set <var>connection</var>'s <a>client</a> to <a>connect client</a>.
+                          </li>
+                          <li>Set <var>connection</var>'s <a>service</a> to
+                          <var>registration</var>'s <a href=
+                          "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">
+                            active worker</a>.
+                          </li>
+                          <li>
+                            <a href=
+                            "https://html.spec.whatwg.org/multipage/comms.html#create-a-new-messageport-object">
+                            Create a new port</a> whose <a href=
+                            "https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a>
+                            is the <a>connect client</a>, and set <var>connection</var>'s <a>client
+                            port</a> to the result value.
+                          </li>
+                          <li>
+                            <a href=
+                            "https://html.spec.whatwg.org/multipage/comms.html#create-a-new-messageport-object">
+                            Create a new port</a> whose <a href=
+                            "https://html.spec.whatwg.org/multipage/comms.html#concept-port-owner">owner</a>
+                            is the <var>registration</var>'s <a href=
+                            "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">
+                            active worker</a>'s <a href=
+                            "https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">
+                            environment settings object</a>, and set <var>connection</var>'s
+                            <a>service port</a> to the result value.
+                          </li>
+                          <li>
+                            <a href=
+                            "https://html.spec.whatwg.org/multipage/comms.html#entangle">Entangle</a>
+                            the <a>client port</a> and the <a>service port</a>.
+                          </li>
+                          <li>Set a newly-created <a href=
+                          "http://people.mozilla.org/~jorendorff/es6-draft.html#sec-list-and-record-specification-type">
+                            Record</a> {[key]: <var>connection</var>'s <a>name</a>, [value]:
+                            <var>connection</var>} to <a>name to connection map</a>.
+                          </li>
                         </ol>
                       </li>
-                      <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code> whose
-                      name is "<code><a>AbortError</a></code>".
+                      <li>Else, reject <var>promise</var> with a <code><a>DOMException</a></code>
+                      whose name is "<code><a>AbortError</a></code>".
                       </li>
                     </ol>
                   </li>
@@ -446,13 +637,14 @@ self.addEventListener('push', function(event) {
               </li>
               <li>Else:
                 <p class="issue">
-                  Figure out sensible behavior when there is no active worker. Probably wait for some
-                  worker to become the active worker?
+                  Figure out sensible behavior when there is no active worker. Probably wait for
+                  some worker to become the active worker?
                 </p>
               </li>
             </ol>
           </li>
-          <li>Return <var>promise</var>.</li>
+          <li>Return <var>promise</var>.
+          </li>
         </ol>
         <p class="issue">
           Somehow phrase this to allow other ways for a user agent to connect to services, in
