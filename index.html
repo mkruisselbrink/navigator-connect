@@ -296,6 +296,9 @@ self.addEventListener('push', function(event) {
           <dt>
             any data
           </dt>
+          <dt>
+            boolean installWorker
+          </dt>
         </dl>
         <dl title="dictionary ServicePortMatchOptions" class="idl">
           <dt>
@@ -528,6 +531,9 @@ self.addEventListener('push', function(event) {
             <var>url</var>, an <a href="https://url.spec.whatwg.org/#concept-absolute-url">an
             absolute URL</a>
           </dd>
+          <dd>
+            <var>options</var>, a <code><a>ServicePortConnectOptions</a></code> instance
+          </dd>
           <dt>
             Output
           </dt>
@@ -545,18 +551,22 @@ self.addEventListener('push', function(event) {
               "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#scope-match-algorithm">
                 Match Service Worker Registration</a> algorithm on <var>url</var>
               </li>
+              <li>If <var>registration</var> is null, and <var>options.installWorker</var> is
+              <code>true</code>, then:
+                <ol>
+                  <li>
+                    <p class="issue">
+                      TODO: run <a href=
+                      "https://github.com/mkruisselbrink/navigator-connect/blob/gh-pages/explainer.md#mommy-where-do-service-workers-come-from">
+                      network header based installation algorithm</a>, which might change
+                      registration to be non-null.
+                    </p>
+                  </li>
+                </ol>
+              </li>
               <li>If <var>registration</var> is null, reject <var>promise</var> with a
               <code><a>DOMException</a></code> whose name is "<code><a>AbortError</a></code>" and
               terminate these steps.
-                <p class="note">
-                  Since navigator.connect requires the target <a>service worker</a> to actually
-                  have been installed before <a>connect client</a> connects, a new way of
-                  installing a <a href=
-                  "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
-                  service worker</a> is provided: <a href=
-                  "https://github.com/mkruisselbrink/navigator-connect/blob/gh-pages/explainer.md#mommy-where-do-service-workers-come-from">
-                  The service worker installation via HTTP response headers</a>.
-                </p>
               </li>
               <li>If <var>registration</var>'s <a href=
               "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-active-worker">
