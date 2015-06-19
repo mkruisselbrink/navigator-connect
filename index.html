@@ -84,11 +84,12 @@ navigator.services.connect('https://example.com/services/echo').then(
         <pre class="example highlight" title="Handle a connection request">
 // https://example.com/serviceworker.js
 navigator.services.addEventListener('connect', function(event) {
-  // Optionally check event.origin to determine if that origin should be
-  // allowed access to this service.
+  // Could optionally check event.origin in addition to checking targetURL to determine if that
+  // origin should be allowed access to this service.
   if (event.targetURL === 'https://example.com/services/echo') {
-    let port = event.accept({name: 'echo_client'});
-    port.postMessage('You are connected!');
+    event.respondWith({accept: true, name: 'echo_client'}).then(
+      (port) =&gt; port.postMessage('You are connected!')
+    );
   }
 });
 
@@ -441,7 +442,7 @@ self.addEventListener('push', function(event) {
         </p>
         <dl title=
         "[Constructor(DOMString type, optional ServicePortConnectEventInit eventInitDict), Exposed=ServiceWorker] interface ServicePortConnectEvent : ExtendableEvent"
-        class="idl" data-merge="ServicePortConnectEventInit">
+        class="idl" data-merge="ServicePortConnectEventInit ServicePortConnectResponse">
           <dt>
             readonly attribute DOMString targetURL
           </dt>
@@ -449,15 +450,27 @@ self.addEventListener('push', function(event) {
             readonly attribute DOMString origin
           </dt>
           <dt>
-            ServicePort accept(optional ServicePortConnectOptions options)
+            Promise&lt;ServicePort&gt; respondWith(Promise&lt;ServicePortConnectResponse&gt;
+            response)
           </dt>
         </dl>
-        <dl title="dictionary ServicePortConnectEventInit : EventInit" class="idl">
+        <dl title="dictionary ServicePortConnectEventInit : ExtendableEventInit" class="idl">
           <dt>
             DOMString targetURL
           </dt>
           <dt>
             DOMString origin
+          </dt>
+        </dl>
+        <dl title="dictionary ServicePortConnectResponse" class="idl">
+          <dt>
+            boolean accept
+          </dt>
+          <dt>
+            DOMString name
+          </dt>
+          <dt>
+            any data
           </dt>
         </dl>
         <p>
@@ -470,16 +483,13 @@ self.addEventListener('push', function(event) {
         </p>
         <p>
           The <code><dfn id=
-          "widl-ServicePortConnectEvent-accept-ServicePort-ServicePortConnectOptions-options">accept(<var>options</var>)</dfn></code>
-          method MUST run these steps:
+          "widl-ServicePortConnectEvent-respondWith-Promise-ServicePort--Promise-ServicePortConnectResponse--response">
+          respondWith(<var>response</var>)</dfn></code> method MUST run these steps:
         </p>
         <ol>
           <li>To be defined.
           </li>
         </ol>
-        <p class="issue">
-          Under discussion how the <a>service</a> accepts or rejects the connection request.
-        </p>
       </section>
       <section>
         <h2>
