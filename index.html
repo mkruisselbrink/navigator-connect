@@ -188,63 +188,50 @@ self.addEventListener('push', function(event) {
       <h2>
         Model
       </h2>
+      <p class="issue">The model definition is in flux. Especially, the concepts around a <em>service port</em> internal slot, a <em>message channel</em> between two <em>service ports</em>, and <em>entangle</em> operation need to be re-defined.</p>
+      <p>
+        A <dfn>service port</dfn> is a messageable port.
+      </p>
+      <p>
+        A <a>service port</a> has its <dfn>name</dfn> (a string).
+      </p>
+      <p>
+        A <a>service port</a> has its <dfn>data</dfn>.
+      </p>
+      <p>
+        A <a>service port</a> has an associated <dfn id="serviceport-connection">connection</dfn> (a <a href="#connection">connection</a>).
+      </p>
+      <p>
+        A <dfn id="connection">connection</dfn> is an <a href=
+        "https://html.spec.whatwg.org/multipage/comms.html#entangle">entangled</a> <a href=
+        "https://html.spec.whatwg.org/multipage/comms.html#message-channels">message channel</a>.
+      </p>
+      <p>
+        A <a href="#connection">connection</a> has an associated <dfn>client</dfn> (an <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a>) and an associated
+        <dfn>service</dfn> (an <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a> whose <a href="https://html.spec.whatwg.org/multipage/webappapis.html#global-object">global object</a> is a <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#service-worker-global-scope-interface">ServiceWorkerGlobalScope</a> object).
+      </p>
+      <p>
+        A <a href="#connection">connection</a> has an associated <dfn>client side port</dfn> (a <a>service port</a>)
+        and an associated <dfn>service side port</dfn> (a <a>service port</a>).
+      </p>
+      <p>
+        A <a href="#connection">connection</a> has its <dfn>target url</dfn> (a string).
+      </p>
       <p>
         A <a href=
         "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker-registration">
         service worker registration</a> has an associated <a>name to service port map</a>.
       </p>
       <p>
-        An <a href=
-        "https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment
-        settings object</a> whose <a>global object</a> is not a
-        <code><a>ServiceWorkerGlobalScope</a></code> also has an associated <a>name to service port
-        map</a>.
+        An <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a> whose <a href="https://html.spec.whatwg.org/multipage/webappapis.html#global-object">global object</a> is not a <code><a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#service-worker-global-scope-interface">ServiceWorkerGlobalScope</a></code> object has an associated <a>name to service port map</a>.
       </p>
       <p>
-        The <a>name to service port map</a> associated with an <a>environment settings object</a>
-        whose <a>global object</a> is a <code><a>ServiceWorkerGlobalScope</a></code> is equal to
-        the <a>name to service port map</a> associated with the <a>service worker registration</a>
-        associated with the <a>service worker</a>.
+        A <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#dfn-service-worker">service worker</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a> does not own a <a>name to service port map</a>. A <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#dfn-service-worker">service worker</a> uses its <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#dfn-containing-service-worker-registration">containing service worker registration</a>'s <a>name to service port map</a>.
       </p>
       <p>
         A <dfn>name to service port map</dfn> is a <a href=
         "http://en.wikipedia.org/wiki/Multimap">Multimap</a> of the Record {[key], [value]} where
         [key] is a <a>name</a> and [value] is a <a>service port</a>.
-      </p>
-      <p>
-        A <dfn>service port</dfn> represents a connection made using this API.
-      </p>
-      <p>
-        A <a>service port</a> has an implicit <dfn>message port</dfn> associated with it.
-      </p>
-      <p>
-        A <a>service port</a> has its <dfn>name</dfn> (a string).
-      </p>
-      <p>
-        A <a>service port</a> has its <dfn>data</dfn> (anything).
-      </p>
-      <p>
-        A <dfn>connection</dfn> is an <a href=
-        "https://html.spec.whatwg.org/multipage/comms.html#entangle">entangled</a> <a href=
-        "https://html.spec.whatwg.org/multipage/comms.html#message-channels">message channel</a>.
-      </p>
-      <p>
-        A <a>connection</a> has an associated <dfn>client</dfn> (one of a <a href=
-        "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
-        service worker</a>, a window, a worker, and a shared worker) and an associated
-        <dfn>service</dfn> (a <a href=
-        "https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-service-worker">
-        service worker</a>).
-      </p>
-      <p>
-        A <a>connection</a> has an associated <dfn>client side port</dfn> (a <a>service port</a>)
-        and an associated <dfn>service side port</dfn> (a <a>service port</a>).
-      </p>
-      <p>
-        A <a>service port</a> has an associated <a>connection</a>.
-      </p>
-      <p>
-        A <a>connection</a> has its <dfn>target url</dfn> (a string).
       </p>
     </section>
     <section>
@@ -309,6 +296,7 @@ self.addEventListener('push', function(event) {
             DOMString targetURL
           </dt>
         </dl>
+        <p>A <a>ServicePortCollection</a> object has an associated <dfn id="serviceportcollection-settings-object">settings object</dfn>, which is an <a href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object">environment settings object</a> whose <a href="https://html.spec.whatwg.org/multipage/webappapis.html#global-object">global object</a> is associated with the <a href="https://html.spec.whatwg.org/multipage/webappapis.html#navigator">Navigator</a> object or the <a href="https://html.spec.whatwg.org/multipage/workers.html#workernavigator">WorkerNavigator</a> object that the <a>ServicePortCollection</a> object is retrieved from.</p>
         <p>
           The <code><dfn id="widl-ServicePortCollection-onconnect">onconnect</dfn></code> attribute
           is an <a>event handler</a> whose corresponding <a>event handler event type</a> is
@@ -334,6 +322,7 @@ self.addEventListener('push', function(event) {
             connect(<var>url</var>, <var>options</var>)</dfn></code> method MUST run these steps:
           </p>
           <ol>
+            <li>If the <a href="https://dom.spec.whatwg.org/#context-object">context object</a>'s <a href="#serviceportcollection-settings-object">settings object</a>'s <a href="https://html.spec.whatwg.org/multipage/webappapis.html#global-object">global object</a> is a <code><a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#service-worker-global-scope-interface">ServiceWorkerGlobalScope</a></code> object and its associated <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#dfn-service-worker-global-scope-service-worker">service worker</a> is not an <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#dfn-active-worker">active worker</a>, return a <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">promise</a> rejected with an "<code><a href="http://heycam.github.io/webidl/#invalidstateerror">InvalidStateError</a></code>" exception.</li>
             <li>Let <var>url</var> be the result of parsing <var>url</var> with <a href=
             "https://html.spec.whatwg.org/multipage/webappapis.html#entry-settings-object">entry
             settings object</a>'s <a href=
@@ -404,16 +393,13 @@ self.addEventListener('push', function(event) {
         </dl>
         <p>
           The <code><dfn id="widl-ServicePort-targetURL">targetURL</dfn></code> attribute MUST
-          return the <a>target url</a> of the <a>connection</a> associated with the <a>service
-          port</a>.
+          return the <a>service port</a>'s <a href="#serviceport-connection">connection</a>'s <a>target url</a>.
         </p>
         <p>
-          The <code><dfn id="widl-ServicePort-name">name</dfn></code> attribute MUST return the
-          <a>name</a> of the <a>service port</a>.
+          The <code><dfn id="widl-ServicePort-name">name</dfn></code> attribute MUST return the <a>service port</a>'s <a>name</a>.
         </p>
         <p>
-          The <code><dfn id="widl-ServicePort-data">data</dfn></code> attribute MUST return the
-          <a>data</a> of the <a>service port</a>.
+          The <code><dfn id="widl-ServicePort-data">data</dfn></code> attribute MUST return the <a>service port</a>' <a>data</a>.
         </p>
         <p>
           The <code><dfn id=
@@ -475,11 +461,11 @@ self.addEventListener('push', function(event) {
         </dl>
         <p>
           The <code><dfn id="widl-ServicePortConnectEvent-targetURL">targetURL</dfn></code>
-          attribute must return the value it was initialized to.
+          attribute MUST return the value it was initialized to.
         </p>
         <p>
           The <code><dfn id="widl-ServicePortConnectEvent-origin">origin</dfn></code> attribute
-          must return the value it was initialized to.
+          MUST return the value it was initialized to.
         </p>
         <p>
           The <code><dfn id=
@@ -589,7 +575,7 @@ self.addEventListener('push', function(event) {
                     following substeps:
                     <ol>
                       <li>Fire an event named <code><a>connect</a></code> using
-                      <code><a>ConnectEvent</a></code> interface at <var>global</var>.
+                      <code><a>ServicePortConnectEvent</a></code> interface at <var>global</var>.
                         <p class="issue">
                           Better define these next steps.
                         </p>
@@ -601,7 +587,7 @@ self.addEventListener('push', function(event) {
                       <li>If <var>shouldAccept</var> is <code>true</code> or a Promise resolving to
                       <code>true</code>, do the following:
                         <ol>
-                          <li>Let <var>connection</var> be a new <a>connection</a>.
+                          <li>Let <var>connection</var> be a new <a href="#connection">connection</a>.
                           </li>
                           <li>Set <var>connection</var>'s <a>name</a> to <var>url</var>.
                           </li>
